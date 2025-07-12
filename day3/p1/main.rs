@@ -53,35 +53,73 @@ fn part1(addr: u32) -> u32 {
 type Coordinates = [i32; 2]; // each value has coordinates. center of coordinates is (0, 0)
 type Value = u32;
 
-fn get_neighbours(point: Coordinates) -> Vec<Coordinates> {
-    let mut result = vec![];
+fn get_neighbours(point: Coordinates, spiral: &HashMap<Coordinates, Value>) -> u32 {
+    // println!("{:?}", point);
+    let mut result = 0;
     for dx in -1..=1 {
         for dy in -1..=1 {
             if !(dx == 0 && dy == 0) {
-                result.push([point[0] + dx, point[1] + dy]);
+                let neighbour = [point[0] + dx, point[1] + dy];
+                // println!("{:?}", neighbour);
+                result += *spiral.get(&neighbour).unwrap_or(&0);
             }
         }
     }
     result
 }
 
-// fn part2(limit: u32) -> u32 {
-//     let mut spiral = HashMap::<Coordinates, Value>::new();
+fn part2(limit: u32) -> u32 {
+    let mut spiral = HashMap::<Coordinates, Value>::new();
 
-//     let mut value = 1;
+    let mut value = 1;
+    let mut next_coords = [0, 0];
 
-//     // add center of the spiral
-//     spiral.insert((0, 0), value);
+    // add center of the spiral
+    spiral.insert(next_coords, value);
 
-//     // let's write loops to add values to spiral in the proper order
-//     let mut q = 3; // q x q squares for q=3,5,7,9...
+    // let's write loops to add values to spiral in the proper order
+    let mut q = 3; // q x q squares for q=3,5,7,9...
 
-//     loop {
-//         let walls = (q - 1) / 2;
+    macro_rules! next_check_limit {
+        ($dx:literal, $dy:literal) => {
+            next_coords = [next_coords[0] + $dx, next_coords[1] + $dy];
+            value = get_neighbours(next_coords, &spiral);
+            if value > limit {
+                return value;
+            }
+            spiral.insert(next_coords, value);
+        }
+    }
 
-//         q += 2;
-//     }
-// }
+    loop {
+        // for data locality
+        // it's better to create iterator for coordinates.
+        // then .take(CACHE_FRIENDLY_AMOUNT) batches to proceed.
+        next_check_limit!(1, 0);
+
+        for _ in 0..q - 2 {
+            next_check_limit!(0, -1);
+        }
+
+        for _ in 0..q - 1 {
+            next_check_limit!(-1, 0);
+        }
+
+        for _ in 0..q - 1 {
+            next_check_limit!(0, 1);
+        }
+
+        for _ in 0..q - 1 {
+            next_check_limit!(1, 0);
+        }
+        // if q == 5 {
+        //     println!("{:?}", spiral);
+        //     return 0;
+        // }
+
+        q += 2;
+    }
+}
 
 fn main() -> Result<(), Box<dyn error::Error>> {
     println!("--- Day 3: Spiral Memory ---");
@@ -89,8 +127,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let input_data = 325489;
 
     println!("{}", part1(input_data));
-
-    println!("{:?}", get_neighbours([0, 0]));
+    println!("{}", part2(input_data));
 
     Ok(())
 }
