@@ -1,2 +1,4 @@
+.PHONY: all
+
 all: main.rs
-	rustc -O main.rs && strip main
+	rustc -C opt-level=3 -C strip=symbols  main.rs
