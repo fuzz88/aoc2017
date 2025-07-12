@@ -6,15 +6,12 @@ fn part1(addr: u32) -> u32 {
         return 0;
     }
 
-    let mut q = 1;
+    let mut q = 3;
     let k;
+    let mut square_area = u32::pow(q, 2);
+    let mut previous_square_area = 1;
 
     let side = loop {
-        // pow(q-2, 2) could be memorized, but still ok for the task.
-
-        let square_area = u32::pow(q, 2);
-        let previous_square_area = u32::pow(q - 2, 2);
-
         if square_area >= addr {
             // q^2 is the amount of elements the square contains.
             // first q when q^2 >= addr is the `q x q` square on the side of which we have `addr`
@@ -22,7 +19,7 @@ fn part1(addr: u32) -> u32 {
             //
             // println!("square = {}", q);
             //
-            // if we count elements on square's sides starting from right lower corner,
+            // if we count elements on square's sides starting from the right lower corner,
             // what is the index of `addr` element in that sequence?
             k = (addr - previous_square_area + 1) % (square_area - previous_square_area);
             // println!("idx on square = {}", k);
@@ -31,12 +28,14 @@ fn part1(addr: u32) -> u32 {
             // we get the index of the side which contains `addr` element.
             break k / q;
         }
-        q += 2
+        q += 2;
+        previous_square_area = square_area;
+        square_area = u32::pow(q, 2);
     };
 
     // println!("side = {}", side);
     //
-    // how much `addr` element shifted from central element of the side?
+    // how much `addr` element shifted from the central element of the side?
     // this is our first coordinate.
     let shift = (k - (q - 1) * side - (q - 1) / 2 - 1) as i32;
     // println!("shift = {}", shift);
