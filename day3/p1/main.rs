@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::error;
 
 fn part1(addr: u32) -> u32 {
@@ -9,9 +10,12 @@ fn part1(addr: u32) -> u32 {
     let k;
 
     let side = loop {
-        // previous powers could be memorized, but still ok for the task.
-        // compiler should get powers out of the loop as invariants.
-        if u32::pow(q, 2) >= addr {
+        // pow(q-2, 2) could be memorized, but still ok for the task.
+
+        let square_area = u32::pow(q, 2);
+        let previous_square_area = u32::pow(q - 2, 2);
+
+        if square_area >= addr {
             // q^2 is the amount of elements the square contains.
             // first q when q^2 >= addr is the `q x q` square on the side of which we have `addr`
             // element.
@@ -20,7 +24,7 @@ fn part1(addr: u32) -> u32 {
             //
             // if we count elements on square's sides starting from right lower corner,
             // what is the index of `addr` element in that sequence?
-            k = (addr - u32::pow(q - 2, 2) + 1) % (u32::pow(q, 2) - u32::pow(q - 2, 2));
+            k = (addr - previous_square_area + 1) % (square_area - previous_square_area);
             // println!("idx on square = {}", k);
             //
             // if we devide this index by the size of the side of the square,
@@ -47,12 +51,47 @@ fn part1(addr: u32) -> u32 {
     i32::abs(shift) as u32 + walls
 }
 
+type Coordinates = [i32; 2]; // each value has coordinates. center of coordinates is (0, 0)
+type Value = u32;
+
+fn get_neighbours(point: Coordinates) -> Vec<Coordinates> {
+    let mut result = vec![];
+    for dx in -1..=1 {
+        for dy in -1..=1 {
+            if !(dx == 0 && dy == 0) {
+                result.push([point[0] + dx, point[1] + dy]);
+            }
+        }
+    }
+    result
+}
+
+// fn part2(limit: u32) -> u32 {
+//     let mut spiral = HashMap::<Coordinates, Value>::new();
+
+//     let mut value = 1;
+
+//     // add center of the spiral
+//     spiral.insert((0, 0), value);
+
+//     // let's write loops to add values to spiral in the proper order
+//     let mut q = 3; // q x q squares for q=3,5,7,9...
+
+//     loop {
+//         let walls = (q - 1) / 2;
+
+//         q += 2;
+//     }
+// }
+
 fn main() -> Result<(), Box<dyn error::Error>> {
     println!("--- Day 3: Spiral Memory ---");
 
     let input_data = 325489;
 
     println!("{}", part1(input_data));
+
+    println!("{:?}", get_neighbours([0, 0]));
 
     Ok(())
 }
