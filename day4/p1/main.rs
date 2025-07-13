@@ -19,11 +19,11 @@ fn read_input(filename: &str) -> Result<Vec<Passphrase>, Box<dyn error::Error>> 
     Ok(passphrases)
 }
 
-fn freqs<T: Eq + Hash + Clone>(items: &Vec<T>) -> HashMap<T, u32> {
+fn freqs<T: Eq + Hash + Clone>(items: impl Iterator<Item = T>) -> HashMap<T, u32> {
     let mut freqs = HashMap::<T, u32>::new();
 
     for item in items {
-        let freq = freqs.entry(item.clone()).or_insert(0);
+        let freq = freqs.entry(item).or_insert(0);
         *freq += 1;
     }
 
@@ -31,7 +31,9 @@ fn freqs<T: Eq + Hash + Clone>(items: &Vec<T>) -> HashMap<T, u32> {
 }
 
 fn is_valid_1(pp: &&Passphrase) -> bool {
-    freqs::<String>(pp).iter().all(|(_, freq)| *freq == 1)
+    freqs::<String>(pp.iter().cloned())
+        .iter()
+        .all(|(_, freq)| *freq == 1)
 }
 
 fn part1(pps: &Vec<Passphrase>) -> usize {
@@ -49,15 +51,12 @@ fn equal_freqs<T: Eq + Hash>(freq1: &HashMap<T, u32>, freq2: &HashMap<T, u32>) -
 }
 
 fn is_valid_2(pp: &&Passphrase) -> bool {
-    let word_freqs = freqs::<String>(pp);
+    let word_freqs = freqs::<String>(pp.iter().cloned());
     let uniq_words = word_freqs.iter().all(|(_, freq)| *freq == 1);
     if !uniq_words {
         return false;
     }
-    let char_freqs: Vec<_> = pp
-        .iter()
-        .map(|word| freqs::<char>(&word.chars().collect()))
-        .collect();
+    let char_freqs: Vec<_> = pp.iter().map(|word| freqs::<char>(word.chars())).collect();
 
     // anagrams have the same char frequencies
     for (idx1, freq1) in char_freqs.iter().enumerate() {
