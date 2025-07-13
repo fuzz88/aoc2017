@@ -4,7 +4,9 @@ use std::error;
 use std::fs;
 use std::io;
 
-fn read_input(filename: &str) -> Result<Vec<u32>, io::Error> {
+type Banks = Vec<u32>;
+
+fn read_input(filename: &str) -> Result<Banks, io::Error> {
     let banks = fs::read_to_string(filename)?
         .split_whitespace()
         .map(|bank| bank.parse().unwrap())
@@ -13,13 +15,13 @@ fn read_input(filename: &str) -> Result<Vec<u32>, io::Error> {
     Ok(banks)
 }
 
-fn cycler<F>(banks: &Vec<u32>, mut terminator: F) -> u32
+fn cycler<F>(banks: &Banks, mut terminator: F) -> u32
 where
-    F: FnMut(&Vec<u32>, &mut HashSet<Vec<u32>>, &mut u32) -> bool,
+    F: FnMut(&Banks, &mut HashSet<Banks>, &mut u32) -> bool,
 {
     let mut steps = 0;
     let mut banks = banks.clone();
-    let mut states = HashSet::<Vec<u32>>::new();
+    let mut states = HashSet::<Banks>::new();
 
     loop {
         steps += 1;
@@ -27,8 +29,8 @@ where
         let mut bank_max = u32::MIN;
         let mut idx_max = 0;
         for (idx, &bank) in banks.iter().enumerate() {
-            // if some max banks have an equal amount of blocks,
-            // we reallocate the first one.
+            // if multiple max banks have the same number of blocks,
+            // we reallocate only the first one.
             if bank > bank_max {
                 bank_max = bank;
                 idx_max = idx;
@@ -52,7 +54,7 @@ where
     }
 }
 
-fn part1(banks: &Vec<u32>) -> u32 {
+fn part1(banks: &Banks) -> u32 {
     cycler(banks, |banks, states, _| {
         if states.contains(banks) {
             return true;
@@ -63,7 +65,7 @@ fn part1(banks: &Vec<u32>) -> u32 {
     })
 }
 
-fn part2(banks: &Vec<u32>) -> u32 {
+fn part2(banks: &Banks) -> u32 {
     let mut first_seen = true;
     let mut state_seen = vec![];
     let mut steps_seen = 0;
