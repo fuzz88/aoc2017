@@ -92,9 +92,6 @@ fn part2(limit: u32) -> u32 {
     }
 
     loop {
-        // for data locality
-        // it's better to create iterator for coordinates.
-        // then .take(CACHE_FRIENDLY_AMOUNT) batches to proceed.
         next_check_limit!(1, 0);
 
         for _ in 0..q - 2 {
