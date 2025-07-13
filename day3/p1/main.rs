@@ -10,6 +10,12 @@ fn part1(addr: u32) -> u32 {
     let k;
     let mut square_area = u32::pow(q, 2);
     let mut previous_square_area = 1;
+    
+//      17  16  15  14  13
+//      18   5   4   3  12
+//      19   6   1   2  11
+//      20   7   8   9  10
+//      21  22  23---> ...
 
     let side = loop {
         if square_area >= addr {
@@ -90,6 +96,12 @@ fn part2(limit: u32) -> u32 {
             spiral.insert(next_coords, value);
         }
     }
+    
+//      147  142  133  122   59
+//      304    5    4    2   57
+//      330   10    1    1   54
+//      351   11   23   25   26
+//      362  747  806--->   ...
 
     loop {
         next_check_limit!(1, 0);
