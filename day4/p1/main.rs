@@ -59,7 +59,7 @@ fn is_valid_2(pp: &&Passphrase) -> bool {
         .map(|word| freqs::<char>(&word.chars().collect()))
         .collect();
 
-    // annagrams have the same char frequencies
+    // anagrams have the same char frequencies
     for (idx1, freq1) in char_freqs.iter().enumerate() {
         for (idx2, freq2) in char_freqs.iter().enumerate() {
             if idx1 != idx2 && equal_freqs::<char>(freq1, freq2) {
