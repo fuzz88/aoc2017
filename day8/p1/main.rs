@@ -93,7 +93,7 @@ impl Computer {
                         let new_reg = self.registers.entry(reg).or_insert(0);
                         *new_reg = value;
                         self.max_register_ever =
-                            self.max_register_ever.max(self.max_current_register());
+                            self.max_register_ever.max(self.max_register());
                     }
                 }
             };
@@ -104,7 +104,7 @@ impl Computer {
         }
     }
 
-    fn max_current_register(&self) -> i32 {
+    fn max_register(&self) -> i32 {
         *self
             .registers
             .values()
@@ -160,7 +160,7 @@ fn part1(program: &Vec<Instruction>) -> i32 {
     // after completing the instructions in your puzzle input?
     let mut computer = Computer::new();
     computer.eval(program);
-    computer.max_current_register()
+    computer.max_register()
 }
 
 fn part2(program: &Vec<Instruction>) -> i32 {
