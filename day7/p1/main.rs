@@ -29,24 +29,21 @@ fn read_input(filename: &str) -> Result<Tower, Box<dyn error::Error>> {
         let mut children = vec![];
 
         if components.len() > 3 {
-            let mut parsed_child;
             // child names with trailing comma
-            for child in &components[3..components.len() - 1] {
-                parsed_child = child[..child.len() - 1].to_string();
-                children.push(parsed_child);
+            for child_item in &components[3..components.len() - 1] {
+                let child_name = child_item[..child_item.len() - 1].to_string();
+                children.push(child_name);
             }
             // last child name without comman
-            let child = &components[components.len() - 1];
-            parsed_child = child[..child.len()].to_string();
-            children.push(parsed_child);
+            children.push(components[components.len() - 1].to_string());
         }
 
         parsed_input.insert(name, (weight, children));
     }
 
-    let mut all_children: Vec<_> = parsed_input
+    let mut all_children: Vec<String> = parsed_input
         .iter()
-        .map(|(_name, values)| values.1.clone())
+        .map(|(_program_name, values)| values.1.clone())
         .flatten()
         .collect();
 
@@ -55,12 +52,12 @@ fn read_input(filename: &str) -> Result<Tower, Box<dyn error::Error>> {
 
     let mut root_name = None;
     // n*log(n) to find root node
-    for (name, _) in &parsed_input {
+    for (name, ..) in &parsed_input {
         match all_children.binary_search(&name) {
-            Ok(_) => {
+            Ok(..) => {
                 continue;
             }
-            Err(_) => {
+            Err(..) => {
                 root_name = Some(name);
                 break;
             }
@@ -117,7 +114,7 @@ fn inspect_weights(tower: &Tower, disbalanced: &mut Vec<u32>) -> u32 {
         None => tower.weight,
         Some(subtowers) => {
             // println!("{:?}", subtowers);
-            let weights: Vec<_> = subtowers
+            let weights: Vec<(u32, u32)> = subtowers
                 .iter()
                 .map(|subtower| (inspect_weights(subtower, disbalanced), subtower.weight))
                 .collect();
