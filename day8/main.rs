@@ -13,14 +13,14 @@ enum OP {
 }
 
 impl OP {
-    fn apply<F>(&self, get_value: F) -> (String, i32)
+    fn apply<F>(&self, mut update_value: F)
     where
-        F: Fn(&str) -> i32,
+        F: FnMut(&str, i32),
     {
         match self {
-            OP::Inc(reg, value) => (reg.to_string(), get_value(reg) + value),
-            OP::Dec(reg, value) => (reg.to_string(), get_value(reg) - value),
-        }
+            OP::Inc(reg, value) => update_value(reg, *value),
+            OP::Dec(reg, value) => update_value(reg, -*value),
+        };
     }
 }
 
@@ -57,15 +57,15 @@ struct Instruction {
     condition: COND,
 }
 
-struct Computer {
+struct CPU {
     registers: HashMap<String, i32>,
     pc: usize,
     max_register_ever: i32,
 }
 
-impl Computer {
+impl CPU {
     fn new() -> Self {
-        Computer {
+        CPU {
             registers: HashMap::new(),
             pc: 0,
             max_register_ever: 0,
@@ -74,6 +74,10 @@ impl Computer {
 
     fn get_reg(&self, reg: &str) -> i32 {
         *self.registers.get(reg).unwrap_or(&0)
+    }
+
+    fn update_reg(&mut self, reg: &str, value: i32) {
+        *self.registers.entry(reg.to_string()).or_insert(0) += value;
     }
 
     fn eval(&mut self, program: &Vec<Instruction>) {
@@ -85,15 +89,14 @@ impl Computer {
                     operation: op,
                     condition: cond,
                 } => {
-                    // partial to bound self to get_reg
-                    let get_value = |reg: &str| self.get_reg(reg);
+                    let get_reg = |reg: &str| self.get_reg(reg);
+                    if cond.is_true(get_reg) {
 
-                    if cond.is_true(get_value) {
-                        let (reg, value) = op.apply(get_value);
-                        let new_reg = self.registers.entry(reg).or_insert(0);
-                        *new_reg = value;
-                        self.max_register_ever =
-                            self.max_register_ever.max(self.max_register());
+                        let update_reg = |reg: &str, value: i32| self.update_reg(reg, value);
+                        op.apply(update_reg);
+
+                        // compute highest register value for part2
+                        self.max_register_ever = self.max_register_ever.max(self.max_register());
                     }
                 }
             };
@@ -158,7 +161,7 @@ fn read_input(filename: &str) -> Result<Vec<Instruction>, Box<dyn error::Error>>
 fn part1(program: &Vec<Instruction>) -> i32 {
     // What is the largest value in any register
     // after completing the instructions in your puzzle input?
-    let mut computer = Computer::new();
+    let mut computer = CPU::new();
     computer.eval(program);
     computer.max_register()
 }
@@ -166,7 +169,7 @@ fn part1(program: &Vec<Instruction>) -> i32 {
 fn part2(program: &Vec<Instruction>) -> i32 {
     // To be safe, the CPU also needs to know
     // the highest value held in any register during this process.
-    let mut computer = Computer::new();
+    let mut computer = CPU::new();
     computer.eval(program);
     computer.max_register_ever
 }
