@@ -21,8 +21,12 @@ fn part1(table: &Vec<Vec<u32>>) -> u32 {
     table
         .iter()
         // .inspect(|row| println!("{:?}", row))
-        // slow, because of double iteration, but still ok for the task.
-        .map(|row| row.iter().max().unwrap() - row.iter().min().unwrap())
+        .map(|row| {
+            let (min, max) = row
+                .iter()
+                .fold((row[0], row[0]), |(min, max), &x| (min.min(x), max.max(x)));
+            max - min
+        })
         .sum()
 }
 
