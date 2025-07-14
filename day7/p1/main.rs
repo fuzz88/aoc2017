@@ -118,8 +118,12 @@ fn inspect_weights(tower: &Tower, disbalanced: &mut Vec<u32>) -> u32 {
                 .iter()
                 .map(|subtower| (inspect_weights(subtower, disbalanced), subtower.weight))
                 .collect();
-            let max_weight = weights.iter().max().unwrap();
-            let min_weight = weights.iter().min().unwrap();
+
+            let (min_weight, max_weight) = weights.iter().fold(
+                (weights[0], weights[0]),
+                |(min, max), &x| (min.min(x), max.max(x)),
+            );
+
             if max_weight.0 != min_weight.0 {
                 // println!("{:?}", weights);
                 disbalanced.push(max_weight.1 - max_weight.0 + min_weight.0);
