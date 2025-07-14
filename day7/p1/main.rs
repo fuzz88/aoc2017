@@ -5,7 +5,6 @@ use std::fs;
 
 type Tower = Box<Program>;
 
-#[derive(Debug, Clone, Eq, Hash, PartialEq)]
 struct Program {
     name: String,
     weight: u32,
@@ -68,42 +67,47 @@ fn read_input(filename: &str) -> Result<Tower, Box<dyn error::Error>> {
     }
     // return root node if found, or throw an fatal error
     if let Some(root_name) = root_name {
-        let root = create_program(&parsed_input, &root_name);
-        Ok(root)
+        Ok(create_tower(&parsed_input, &root_name))
     } else {
         Err("fatal error: no root node is found")?
     }
 }
 
-fn create_program(parsed_input: &ParsedInput, name: &str) -> Box<Program> {
+fn create_tower(parsed_input: &ParsedInput, name: &str) -> Box<Program> {
     let program_data = parsed_input.get(name).unwrap();
-    let mut program = Box::new(Program {
+
+    let weight = program_data.0;
+
+    let mut tower = Box::new(Program {
         name: name.to_string(),
-        weight: program_data.0,
+        weight,
         children: None,
     });
-    let children: Vec<_> = program_data
-        .1
+
+    let children_names = &program_data.1;
+
+    let children: Vec<Tower> = children_names
         .iter()
-        .map(|child_name| create_program(parsed_input, child_name))
+        .map(|child_name| create_tower(parsed_input, child_name))
         .collect();
 
     if !children.is_empty() {
-        program.children = Some(children);
+        tower.children = Some(children);
     }
-    program
+
+    tower
 }
 
-fn part1(tower: &Tower) -> &str {
+fn part1(root: &Tower) -> &str {
     // What is the name of the bottom program?
-    &tower.name
+    &root.name
 }
 
-fn part2(tower: &Tower) -> u32 {
+fn part2(root: &Tower) -> u32 {
     // Given that exactly one program is the wrong weight,
     // what would its weight need to be to balance the entire tower?
     let mut disbalanced = vec![];
-    inspect_weights(tower, &mut disbalanced);
+    inspect_weights(root, &mut disbalanced);
     disbalanced[0]
 }
 
