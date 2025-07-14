@@ -14,9 +14,10 @@ struct Program {
 type ParsedInput = HashMap<String, (u32, Vec<String>)>;
 
 fn read_input(filename: &str) -> Result<Tower, Box<dyn error::Error>> {
-    let splitted_lines: Vec<Vec<String>> = fs::read_to_string(filename)?
+    let input_content = fs::read_to_string(filename)?;
+    let splitted_lines: Vec<Vec<&str>> = input_content
         .lines()
-        .map(|line| line.split_whitespace().map(|s| s.to_string()).collect())
+        .map(|line| line.split_whitespace().collect())
         .collect();
 
     let mut parsed_input: ParsedInput = HashMap::new();
