@@ -22,8 +22,8 @@ fn read_input(filename: &str) -> Result<Tower, Box<dyn error::Error>> {
     let mut parsed_input: ParsedInput = HashMap::new();
 
     for components in splitted_lines {
+        let name = components[0].to_string();
         let weight: u32 = components[1][1..components[1].len() - 1].parse().unwrap();
-        // println!("{} {}", name, weight);
 
         let mut children = vec![];
 
@@ -33,16 +33,14 @@ fn read_input(filename: &str) -> Result<Tower, Box<dyn error::Error>> {
             for child in &components[3..components.len() - 1] {
                 parsed_child = child[..child.len() - 1].to_string();
                 children.push(parsed_child);
-                // println!("{}", parsed_child);
             }
             // last child name without comman
             let child = &components[components.len() - 1];
             parsed_child = child[..child.len()].to_string();
             children.push(parsed_child);
-            // println!("{}", parsed_child);
         }
 
-        parsed_input.insert(components[0].clone(), (weight, children));
+        parsed_input.insert(name, (weight, children));
     }
 
     let mut all_children: Vec<_> = parsed_input
@@ -51,10 +49,11 @@ fn read_input(filename: &str) -> Result<Tower, Box<dyn error::Error>> {
         .flatten()
         .collect();
 
+    // for the binary search
     all_children.sort();
 
     let mut root_name = None;
-
+    // n*log(n) to find root node
     for (name, _) in &parsed_input {
         match all_children.binary_search(&name) {
             Ok(_) => {
@@ -66,13 +65,13 @@ fn read_input(filename: &str) -> Result<Tower, Box<dyn error::Error>> {
             }
         }
     }
+    // return root node if found, or throw an fatal error
     if let Some(root_name) = root_name {
         let root = create_program(&parsed_input, &root_name);
         Ok(root)
     } else {
         Err("fatal error: no root node is found")?
     }
-
 }
 
 fn create_program(parsed_input: &ParsedInput, name: &str) -> Box<Program> {
@@ -91,6 +90,11 @@ fn create_program(parsed_input: &ParsedInput, name: &str) -> Box<Program> {
     program
 }
 
+fn part1(tower: &Tower) -> &str {
+    // name of the root
+    &tower.name
+}
+
 fn main() -> Result<(), Box<dyn error::Error>> {
     println!("--- Day 7: Recursive Circus ---");
 
@@ -100,7 +104,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let input_data = read_input(&input_file)?;
 
-    println!("{}", input_data.name);
+    println!("{}", part1(&input_data));
 
     Ok(())
 }
