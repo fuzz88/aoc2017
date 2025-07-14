@@ -3,14 +3,15 @@ use std::env;
 use std::error;
 use std::fs;
 
+type Tower = Box<Program>;
+
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 struct Program {
     name: String,
     weight: u32,
-    children: Option<Vec<Box<Program>>>,
+    children: Option<Vec<Tower>>,
 }
 
-type Tower = Box<Program>;
 type ParsedInput = HashMap<String, (u32, Vec<String>)>;
 
 fn read_input(filename: &str) -> Result<Tower, Box<dyn error::Error>> {
@@ -81,18 +82,49 @@ fn create_program(parsed_input: &ParsedInput, name: &str) -> Box<Program> {
         weight: program_data.0,
         children: None,
     });
-    let children = program_data
+    let children: Vec<_> = program_data
         .1
         .iter()
         .map(|child_name| create_program(parsed_input, child_name))
         .collect();
-    program.children = Some(children);
+
+    if !children.is_empty() {
+        program.children = Some(children);
+    }
     program
 }
 
 fn part1(tower: &Tower) -> &str {
-    // name of the root
+    // What is the name of the bottom program?
     &tower.name
+}
+
+fn part2(tower: &Tower) -> u32 {
+    // Given that exactly one program is the wrong weight,
+    // what would its weight need to be to balance the entire tower?
+    let mut disbalanced = vec![];
+    inspect_weights(tower, &mut disbalanced);
+    disbalanced[0]
+}
+
+fn inspect_weights(tower: &Tower, disbalanced: &mut Vec<u32>) -> u32 {
+    match &tower.children {
+        None => tower.weight,
+        Some(subtowers) => {
+            // println!("{:?}", subtowers);
+            let weights: Vec<_> = subtowers
+                .iter()
+                .map(|subtower| (inspect_weights(subtower, disbalanced), subtower.weight))
+                .collect();
+            let max_weight = weights.iter().max().unwrap();
+            let min_weight = weights.iter().min().unwrap();
+            if max_weight.0 != min_weight.0 {
+                // println!("{:?}", weights);
+                disbalanced.push(max_weight.1 - max_weight.0 + min_weight.0);
+            }
+            tower.weight + weights.iter().map(|subweights| subweights.0).sum::<u32>()
+        }
+    }
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
@@ -105,6 +137,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let input_data = read_input(&input_file)?;
 
     println!("{}", part1(&input_data));
+    println!("{}", part2(&input_data));
 
     Ok(())
 }
