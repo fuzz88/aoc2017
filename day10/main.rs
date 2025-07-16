@@ -12,7 +12,9 @@ fn read_input(filename: &str) -> Result<Vec<u32>, Box<dyn error::Error>> {
     Ok(lengths)
 }
 
-fn reverse(list: &Vec<u32>, position: usize, length: usize) -> &Vec<u32> {
+fn reverse(list: &Vec<u32>, position: u32, length: u32) -> &Vec<u32> {
+    println!("{:?}", list);
+    println!("{} {}", position, length);
     todo!()
 }
 
@@ -21,11 +23,19 @@ fn part1(input: &Vec<u32>) -> u32 {
     let size = input.pop().unwrap() as usize;
 
     let mut list = vec![];
-    (0..size).for_each(|num| list.push(num));
-
+    (0..size).for_each(|num| list.push(num as u32));
     println!("{:?}", list);
 
-    0
+    let mut skip = 0;
+    let mut position = 0;
+
+    for length in input {
+        list = reverse(&list, position, length).to_vec();
+        position += (length + skip) % list.len() as u32;
+        skip += 1;
+    }
+
+    list[0..=1].iter().copied().product()
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
