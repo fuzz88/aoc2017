@@ -96,7 +96,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let input_data = read_input(&input_file)?;
 
     println!("{}", part1(&input_data));
-    println!("{}", part2(include_bytes!("input.txt")));
+    println!("{}", part2(fs::read_to_string(&input_file)?.as_bytes()));
 
     Ok(())
 }
