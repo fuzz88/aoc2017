@@ -28,9 +28,13 @@ impl ops::Add<HexShift> for HexPoint {
 }
 
 impl HexPoint {
+    fn axial_subtract(self, b: HexPoint) -> HexPoint {
+        HexPoint(self.0 - b.0, self.1 - b.1)
+    }
+
     fn axial_distance(self, b: HexPoint) -> u32 {
-        ((i32::abs(self.0 - b.0) + i32::abs(self.0 + self.1 - b.0 - b.1) + i32::abs(self.1 - b.1))
-            / 2) as u32
+        let vec = self.axial_subtract(b);
+        ((i32::abs(vec.0) + i32::abs(vec.0 + vec.1) + i32::abs(vec.1)) / 2) as u32
     }
 }
 
@@ -85,16 +89,15 @@ fn read_input(filename: &str) -> Result<Vec<Dir>, Box<dyn error::Error>> {
 fn part1(directions: &Vec<Dir>) -> u32 {
     // Starting where the child process started,
     // you need to determine the fewest number of steps required to reach him.
-    let start = HexPoint(0, 0);
-    let end = directions
-        .iter()
-        .fold(start, |point, direction| point + direction.get_shift());
+    let end_point = directions.iter().fold(HexPoint(0, 0), |point, direction| {
+        point + direction.get_shift()
+    });
 
-    start.axial_distance(end)
+    HexPoint(0, 0).axial_distance(end_point)
 }
 
 fn part2(directions: &Vec<Dir>) -> u32 {
-    // How many steps away is the furthest 
+    // How many steps away is the furthest
     // the child process ever got from his starting position?
     let mut max_dist = 0;
     let mut current_point = HexPoint(0, 0);
