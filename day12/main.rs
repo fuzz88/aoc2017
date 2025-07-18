@@ -1,4 +1,3 @@
-#![feature(unwrap_infallible)]
 use std::collections::{HashMap, VecDeque};
 use std::env;
 use std::error;
@@ -34,6 +33,8 @@ where
     let mut to_visit = VecDeque::new();
 
     to_visit.push_back(start);
+    visited.push(start);
+    visit(start);
 
     while let Some(node) = to_visit.pop_front() {
         if let Some(neighbours) = graph.get(&node) {
