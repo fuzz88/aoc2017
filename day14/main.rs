@@ -76,23 +76,18 @@ fn part1(input: &String) -> u32 {
 fn region_mark(disk: &mut [bool; 128 * 128], col: usize, row: usize) {
     let mut to_process = VecDeque::new();
 
-    // println!("{} {}", row, col);
     to_process.push_back((col, row));
 
-    while let Some(coords) = to_process.pop_front() {
-        let (col, row) = coords;
+    while let Some((col, row)) = to_process.pop_front() {
         disk[row * 128 + col] = false;
-        // println!("marked");
+
         for (dr, dc) in [(0, 1), (1, 0), (0, !0), (!0, 0)] {
             // https://t.me/bminaiev_blog/59
             let nrow = row.overflowing_add(dr).0;
             let ncol = col.overflowing_add(dc).0;
-            // println!("{} {}", ncol, nrow);
-            // todo!();
-            if nrow < 128 && ncol < 128 {
-                if disk[nrow * 128 + ncol] {
-                    to_process.push_back((ncol, nrow));
-                }
+
+            if nrow < 128 && ncol < 128 && disk[nrow * 128 + ncol] {
+                to_process.push_back((ncol, nrow));
             }
         }
     }
@@ -131,28 +126,27 @@ fn part2(input: &String) -> u32 {
             }
         });
 
-        let mut column: Vec<u8> = list
+        let mut row: Vec<u8> = list
             .chunks(16)
             // densify [256] -> [16]
             .map(|chunk| chunk.iter().copied().reduce(|acc, e| acc ^ e).unwrap())
             .collect();
 
-        let mut row = 128;
-        let mut col = 0;
+        let mut col_n = 128;
+        let mut bits = 0; // unused 0, but must be initialized at this point.
 
-        while row != 0 {
-            if row % 8 == 0 {
-                col = column.pop().unwrap();
+        while col_n != 0 {
+            if col_n % 8 == 0 {
+                bits = row.pop().unwrap();
             }
-            disk[idx * 128 + row - 1] = (col != 0) && col % 2 != 0;
-            if col != 0 {
-                col = col / 2;
+            disk[idx * 128 + col_n - 1] = (bits != 0) && bits & 1 == 1;
+            if bits != 0 {
+                bits = bits >> 1;
             }
-            row -= 1;
+            col_n -= 1;
         }
     });
 
-    // println!("{:?}", disk);
     let mut regions_count = 0;
 
     for row in 0..128 {
@@ -163,8 +157,6 @@ fn part2(input: &String) -> u32 {
             }
         }
     }
-
-    // println!("{:?}", disk);
 
     regions_count
 }
