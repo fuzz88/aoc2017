@@ -27,6 +27,13 @@ impl ops::Add<HexShift> for HexPoint {
     }
 }
 
+impl HexPoint {
+    fn axial_distance(self, b: HexPoint) -> u32 {
+        ((i32::abs(self.0 - b.0) + i32::abs(self.0 + self.1 - b.0 - b.1) + i32::abs(self.1 - b.1))
+            / 2) as u32
+    }
+}
+
 #[derive(Debug)]
 enum Dir {
     N,
@@ -64,10 +71,6 @@ impl Dir {
             Dir::NW => HexShift(-1, 0),
         }
     }
-
-    fn axial_distance(a: HexPoint, b: HexPoint) -> u32 {
-        ((i32::abs(a.0 - b.0) + i32::abs(a.0 + a.1 - b.0 - b.1) + i32::abs(a.1 - b.1)) / 2) as u32
-    }
 }
 
 fn read_input(filename: &str) -> Result<Vec<Dir>, Box<dyn error::Error>> {
@@ -84,13 +87,11 @@ fn part1(directions: &Vec<Dir>) -> u32 {
     // the fewest number of steps required to reach him.
     // (A "step" means to move from the hex you are in to any adjacent hex.)
     let start = HexPoint(0, 0);
-    let end = directions.iter().fold(start, |point, direction| {
-        let shift = direction.get_shift();
-        let next_point = point + shift;
-        next_point
-    });
+    let end = directions
+        .iter()
+        .fold(start, |point, direction| point + direction.get_shift());
 
-    Dir::axial_distance(start, end)
+    start.axial_distance(end)
 }
 
 fn part2(directions: &Vec<Dir>) -> u32 {
@@ -99,14 +100,8 @@ fn part2(directions: &Vec<Dir>) -> u32 {
     let mut current_point = HexPoint(0, 0);
 
     for direction in directions {
-        let shift = direction.get_shift();
-        let next_point = current_point + shift;
-        let next_dist = Dir::axial_distance(HexPoint(0, 0), next_point);
-
-        if next_dist > max_dist {
-            max_dist = next_dist;
-        }
-
+        let next_point = current_point + direction.get_shift();
+        max_dist = max_dist.max(next_point.axial_distance(HexPoint(0, 0)));
         current_point = next_point;
     }
 
