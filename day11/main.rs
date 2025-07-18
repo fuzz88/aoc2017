@@ -99,14 +99,14 @@ fn part1(directions: &Vec<Dir>) -> u32 {
 fn part2(directions: &Vec<Dir>) -> u32 {
     // How many steps away is the furthest
     // the child process ever got from his starting position?
-    let mut max_dist = 0;
-    let mut current_point = HexPoint(0, 0);
-
-    for direction in directions {
-        let next_point = current_point + direction.get_shift();
-        max_dist = max_dist.max(next_point.axial_distance(HexPoint(0, 0)));
-        current_point = next_point;
-    }
+    let max_dist = directions
+        .iter()
+        .scan(HexPoint(0, 0), |point, direction| {
+            *point = *point + direction.get_shift();
+            Some(HexPoint(0, 0).axial_distance(*point))
+        })
+        .max()
+        .expect("expecting non-empty iterators");
 
     max_dist
 }
