@@ -43,9 +43,9 @@ where
                     Ok(_) => {
                         continue;
                     }
-                    Err(_) => {
-                        visited.push(*neighbour);
-                        visited.sort();
+                    Err(idx) => {
+                        // inserting at `idx` keeps `visited` sorted.
+                        visited.insert(idx, *neighbour);
                         to_visit.push_back(*neighbour);
                         visit(*neighbour);
                     }
@@ -59,7 +59,7 @@ fn part1(graph: &Graph) -> u32 {
     // How many programs are in the group that contains program ID 0?
     let mut group_size = 0;
 
-    bfs(graph, start, |_| group_size += 1);
+    bfs(graph, 0, |_| group_size += 1);
 
     group_size
 }
@@ -76,11 +76,11 @@ fn part2(graph: &Graph) -> u32 {
 
         bfs(graph, start, |node| match nodes.binary_search(&node) {
             Ok(index) => {
+                // removing from sorted vec keeps it sorted.
                 nodes.remove(index);
             }
             Err(_) => {}
         });
-        nodes.sort();
     }
 
     group_count
