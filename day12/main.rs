@@ -55,15 +55,35 @@ where
     }
 }
 
-fn calculate_group_size(graph: &Graph, start: u32) -> u32 {
+fn part1(graph: &Graph) -> u32 {
+    // How many programs are in the group that contains program ID 0?
     let mut group_size = 0;
+
     bfs(graph, start, |_| group_size += 1);
+
     group_size
 }
 
-fn part1(graph: &Graph) -> u32 {
-    // How many programs are in the group that contains program ID 0?
-    calculate_group_size(graph, 0)
+fn part2(graph: &Graph) -> u32 {
+    // How many groups are there in total?
+    let mut group_count = 0;
+
+    let mut nodes: Vec<u32> = graph.keys().copied().collect();
+    nodes.sort();
+
+    while let Some(start) = nodes.pop() {
+        group_count += 1;
+
+        bfs(graph, start, |node| match nodes.binary_search(&node) {
+            Ok(index) => {
+                nodes.remove(index);
+            }
+            Err(_) => {}
+        });
+        nodes.sort();
+    }
+
+    group_count
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
@@ -76,6 +96,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let input_data = read_input(&input_file)?;
 
     println!("{}", part1(&input_data));
+    println!("{}", part2(&input_data));
 
     Ok(())
 }
