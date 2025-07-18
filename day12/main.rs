@@ -1,5 +1,70 @@
+#![feature(unwrap_infallible)]
+use std::collections::{HashMap, VecDeque};
 use std::env;
 use std::error;
+use std::fs;
+
+type Graph = HashMap<u32, Vec<u32>>;
+
+fn parse_line(line: &str) -> (u32, Vec<u32>) {
+    let mut components = line
+        .split_whitespace()
+        .map(|node| node.strip_suffix(",").unwrap_or(node));
+
+    let node = components.next().unwrap().parse().unwrap();
+    let connected = components.skip(1).map(|num| num.parse().unwrap()).collect();
+
+    (node, connected)
+}
+
+fn read_input(filename: &str) -> Result<Graph, Box<dyn error::Error>> {
+    let graph = fs::read_to_string(filename)?
+        .lines()
+        .map(|line| parse_line(line))
+        .collect();
+
+    Ok(graph)
+}
+
+fn bfs<F>(graph: &Graph, start: u32, mut visit: F)
+where
+    F: FnMut(u32),
+{
+    let mut visited = vec![];
+    let mut to_visit = VecDeque::new();
+
+    to_visit.push_back(start);
+
+    while let Some(node) = to_visit.pop_front() {
+        if let Some(neighbours) = graph.get(&node) {
+            for neighbour in neighbours {
+                // is it faster than hashing u32 with HashSet?
+                match visited.binary_search(neighbour) {
+                    Ok(_) => {
+                        continue;
+                    }
+                    Err(_) => {
+                        visited.push(*neighbour);
+                        visited.sort();
+                        to_visit.push_back(*neighbour);
+                        visit(*neighbour);
+                    }
+                };
+            }
+        }
+    }
+}
+
+fn calculate_group_size(graph: &Graph, start: u32) -> u32 {
+    let mut group_size = 0;
+    bfs(graph, start, |_| group_size += 1);
+    group_size
+}
+
+fn part1(graph: &Graph) -> u32 {
+    // How many programs are in the group that contains program ID 0?
+    calculate_group_size(graph, 0)
+}
 
 fn main() -> Result<(), Box<dyn error::Error>> {
     println!("--- Day12: Digital Plumber ---");
@@ -7,7 +72,10 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let input_file = env::args()
         .nth(1)
         .ok_or("no input file as cli argument is provided")?;
-    println!("{}", input_file);
+
+    let input_data = read_input(&input_file)?;
+
+    println!("{}", part1(&input_data));
 
     Ok(())
 }
