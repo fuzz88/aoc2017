@@ -43,8 +43,7 @@ fn read_input(filename: &str) -> Result<Tower, Box<dyn error::Error>> {
 
     let mut all_children: Vec<String> = parsed_input
         .iter()
-        .map(|(_program_name, values)| values.1.clone())
-        .flatten()
+        .flat_map(|(_program_name, values)| values.1.clone())
         .collect();
 
     // for the binary search
