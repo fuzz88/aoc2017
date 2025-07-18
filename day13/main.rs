@@ -53,6 +53,7 @@ fn part2(firewall: &Firewall) -> u32 {
                 let delayed = idx + delay;
                 if delayed % (depth * 2 - 2) == 0 {
                     found = false;
+                    break;
                 }
             }
         }
