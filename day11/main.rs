@@ -1,6 +1,10 @@
 use std::env;
 use std::error;
 use std::fs;
+use std::ops;
+
+// brilliant tutorial on hexagonal grids.
+// https://www.redblobgames.com/grids/hexagons/#coordinates
 
 //      \ n  /
 //    nw +--+ ne
@@ -9,6 +13,19 @@ use std::fs;
 //      \    /
 //    sw +--+ se
 //      / s  \
+
+#[derive(Clone, Copy)]
+struct HexPoint(i32, i32);
+#[derive(Clone, Copy)]
+struct HexShift(i32, i32);
+
+impl ops::Add<HexShift> for HexPoint {
+    type Output = HexPoint;
+
+    fn add(self, rhs: HexShift) -> HexPoint {
+        HexPoint(self.0 + rhs.0, self.1 + rhs.1)
+    }
+}
 
 #[derive(Debug)]
 enum Dir {
@@ -33,6 +50,24 @@ impl Dir {
             dir  => unimplemented!("unknown direction: {}", dir),
         }
     }
+
+    #[rustfmt::skip]
+    fn get_shift(&self) -> HexShift {
+        // axial coordinates
+        // flat rotation
+        match self {
+            Dir::N  => HexShift(0, -1),
+            Dir::NE => HexShift(1, -1),
+            Dir::SE => HexShift(1, 0),
+            Dir::S  => HexShift(0, 1),
+            Dir::SW => HexShift(-1, 1),
+            Dir::NW => HexShift(-1, 0),
+        }
+    }
+
+    fn axial_distance(a: HexPoint, b: HexPoint) -> u32 {
+        ((i32::abs(a.0 - b.0) + i32::abs(a.0 + a.1 - b.0 - b.1) + i32::abs(a.1 - b.1)) / 2) as u32
+    }
 }
 
 fn read_input(filename: &str) -> Result<Vec<Dir>, Box<dyn error::Error>> {
@@ -44,6 +79,40 @@ fn read_input(filename: &str) -> Result<Vec<Dir>, Box<dyn error::Error>> {
     Ok(directions)
 }
 
+fn part1(directions: &Vec<Dir>) -> u32 {
+    // Starting where he started, you need to determine
+    // the fewest number of steps required to reach him.
+    // (A "step" means to move from the hex you are in to any adjacent hex.)
+    let start = HexPoint(0, 0);
+    let end = directions.iter().fold(start, |point, direction| {
+        let shift = direction.get_shift();
+        let next_point = point + shift;
+        next_point
+    });
+
+    Dir::axial_distance(start, end)
+}
+
+fn part2(directions: &Vec<Dir>) -> u32 {
+    // How many steps away is the furthest he ever got from his starting position?
+    let mut max_dist = 0;
+    let mut current_point = HexPoint(0, 0);
+
+    for direction in directions {
+        let shift = direction.get_shift();
+        let next_point = current_point + shift;
+        let next_dist = Dir::axial_distance(HexPoint(0, 0), next_point);
+
+        if next_dist > max_dist {
+            max_dist = next_dist;
+        }
+
+        current_point = next_point;
+    }
+
+    max_dist
+}
+
 fn main() -> Result<(), Box<dyn error::Error>> {
     println!("--- Day11: Hex Ed ---");
 
@@ -53,7 +122,8 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let input_data = read_input(&input_file)?;
 
-    println!("{:?}", input_data);
+    println!("{}", part1(&input_data));
+    println!("{}", part2(&input_data));
 
     Ok(())
 }
