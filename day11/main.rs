@@ -83,9 +83,8 @@ fn read_input(filename: &str) -> Result<Vec<Dir>, Box<dyn error::Error>> {
 }
 
 fn part1(directions: &Vec<Dir>) -> u32 {
-    // Starting where he started, you need to determine
-    // the fewest number of steps required to reach him.
-    // (A "step" means to move from the hex you are in to any adjacent hex.)
+    // Starting where the child process started,
+    // you need to determine the fewest number of steps required to reach him.
     let start = HexPoint(0, 0);
     let end = directions
         .iter()
@@ -95,7 +94,8 @@ fn part1(directions: &Vec<Dir>) -> u32 {
 }
 
 fn part2(directions: &Vec<Dir>) -> u32 {
-    // How many steps away is the furthest he ever got from his starting position?
+    // How many steps away is the furthest 
+    // the child process ever got from his starting position?
     let mut max_dist = 0;
     let mut current_point = HexPoint(0, 0);
 
