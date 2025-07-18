@@ -30,13 +30,14 @@ where
     F: FnMut(u32),
 {
     let mut visited = vec![];
-    let mut to_visit = VecDeque::new();
+    let mut to_process = VecDeque::new();
 
-    to_visit.push_back(start);
+    to_process.push_back(start);
     visited.push(start);
-    visit(start);
 
-    while let Some(node) = to_visit.pop_front() {
+    while let Some(node) = to_process.pop_front() {
+        visit(node);
+
         if let Some(neighbours) = graph.get(&node) {
             for neighbour in neighbours {
                 // is it faster than hashing u32 with HashSet?
@@ -47,8 +48,7 @@ where
                     Err(idx) => {
                         // inserting at `idx` keeps `visited` sorted.
                         visited.insert(idx, *neighbour);
-                        to_visit.push_back(*neighbour);
-                        visit(*neighbour);
+                        to_process.push_back(*neighbour);
                     }
                 };
             }
