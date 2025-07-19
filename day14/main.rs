@@ -42,6 +42,7 @@ fn read_input(filename: &str) -> Result<String, Box<dyn error::Error>> {
     Ok(fs::read_to_string(filename)?.trim_end().to_string())
 }
 
+#[inline(always)]
 fn reverse(list: &mut Vec<u8>, position: usize, length: usize) {
     let end_pos = position + length - 1;
 
