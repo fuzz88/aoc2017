@@ -4,21 +4,15 @@ use std::error;
 use std::fs;
 
 #[derive(Debug)]
-struct BitField128 {
-    arr: [u8; 2048],
+struct BitField128<'a> {
+    arr: &'a mut [u8],
 }
 
-impl BitField128 {
-    fn from_vec(numbers: &Vec<u8>) -> Self {
+impl<'a> BitField128<'a> {
+    fn from_vec(numbers: &'a mut Vec<u8>) -> BitField128<'a> {
         assert!(numbers.len() == 2048);
 
-        let mut arr: [u8; 2048] = [0; 2048];
-
-        for idx in 0..2048 {
-            arr[idx] = numbers[idx];
-        }
-
-        BitField128 { arr }
+        BitField128 { arr: numbers }
     }
 
     fn is_used(&self, col: usize, row: usize) -> bool {
@@ -139,8 +133,9 @@ fn region_mark(disk: &mut BitField128, col: usize, row: usize) {
 fn part2(input: &str) -> u32 {
     // How many regions are present given your key string?
 
-    let mut disk = BitField128::from_vec(
-        &(0..128)
+    let now = std::time::Instant::now();
+
+        let mut numbers = (0..128)
             .flat_map(|idx| {
                 calculate_sparse_hash(input, idx)
                     .chunks(16)
@@ -148,8 +143,8 @@ fn part2(input: &str) -> u32 {
                     .map(|chunk| chunk.iter().copied().reduce(|acc, e| acc ^ e).unwrap())
                     .collect::<Vec<u8>>()
             })
-            .collect(),
-    );
+            .collect();
+    let mut disk = BitField128::from_vec(&mut numbers);
 
     let mut regions_count = 0;
 
@@ -161,6 +156,8 @@ fn part2(input: &str) -> u32 {
             }
         }
     }
+
+    println!("{:?}", now.elapsed());
 
     regions_count
 }
