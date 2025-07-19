@@ -93,19 +93,14 @@ fn calculate_sparse_hash(input: &str, idx: usize) -> Vec<u8> {
 
 fn part1(input: &str) -> u32 {
     // Given your actual key string, how many squares are used?
-
     (0..128)
         .map(|idx| {
-            let sparse_hash = calculate_sparse_hash(input, idx);
-
-            let used: u32 = sparse_hash
+            calculate_sparse_hash(input, idx)
                 .chunks(16)
                 // densify [256] -> [16]
                 .map(|chunk| chunk.iter().copied().reduce(|acc, e| acc ^ e).unwrap())
                 .map(|num| num.count_ones())
-                .sum();
-
-            used
+                .sum::<u32>()
         })
         .sum()
 }
