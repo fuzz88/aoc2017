@@ -9,7 +9,7 @@ struct BitField128 {
 }
 
 impl BitField128 {
-    fn from_vec(numbers: &[u8]) -> Self {
+    fn from_vec(numbers: &Vec<u8>) -> Self {
         assert!(numbers.len() == 2048);
 
         let mut arr: [u8; 2048] = [0; 2048];
@@ -98,6 +98,7 @@ fn calculate_sparse_hash(input: &str, idx: usize) -> Vec<u8> {
 
 fn part1(input: &str) -> u32 {
     // Given your actual key string, how many squares are used?
+
     (0..128)
         .map(|idx| {
             let sparse_hash = calculate_sparse_hash(input, idx);
@@ -136,20 +137,18 @@ fn region_mark(disk: &mut BitField128, col: usize, row: usize) {
 
 fn part2(input: &str) -> u32 {
     // How many regions are present given your key string?
-    //
-    let mut disk = Vec::<u8>::new();
 
-    (0..128).for_each(|idx| {
-        let sparse_hash = calculate_sparse_hash(input, idx);
-
-        sparse_hash
-            .chunks(16)
-            // densify [256] -> [16]
-            .map(|chunk| chunk.iter().copied().reduce(|acc, e| acc ^ e).unwrap())
-            .for_each(|num| disk.push(num));
-    });
-
-    let mut disk = BitField128::from_vec(&disk);
+    let mut disk = BitField128::from_vec(
+        &(0..128)
+            .flat_map(|idx| {
+                calculate_sparse_hash(input, idx)
+                    .chunks(16)
+                    // densify [256] -> [16]
+                    .map(|chunk| chunk.iter().copied().reduce(|acc, e| acc ^ e).unwrap())
+                    .collect::<Vec<u8>>()
+            })
+            .collect(),
+    );
 
     let mut regions_count = 0;
 
