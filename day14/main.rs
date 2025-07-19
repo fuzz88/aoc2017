@@ -64,39 +64,45 @@ fn reverse(list: &mut Vec<u8>, position: usize, length: usize) {
     }
 }
 
-fn part1(input: &String) -> u32 {
+fn calculate_sparse_hash(input: &str, idx: usize) -> Vec<u8> {
+    let mut to_hash = input.to_string();
+    to_hash.push('-');
+    to_hash.push_str(&idx.to_string());
+
+    let mut lengths: Vec<usize> = to_hash
+        .as_bytes()
+        .iter()
+        .copied()
+        .map(|v| v as usize)
+        .collect();
+
+    lengths.extend([17, 31, 73, 47, 23]);
+
+    let mut hash = vec![];
+    (0..=255).for_each(|num| hash.push(num as u8));
+
+    let mut position = 0;
+    let mut skip = 0;
+
+    // 64 rounds
+    (0..64).for_each(|_| {
+        for length in &lengths {
+            reverse(&mut hash, position, *length);
+            position += (*length + skip) % hash.len();
+            skip += 1;
+        }
+    });
+
+    hash
+}
+
+fn part1(input: &str) -> u32 {
     // Given your actual key string, how many squares are used?
     (0..128)
         .map(|idx| {
-            let mut to_hash = input.clone();
-            to_hash.push('-');
-            to_hash.push_str(&idx.to_string());
+            let sparse_hash = calculate_sparse_hash(input, idx);
 
-            let mut lengths: Vec<usize> = to_hash
-                .as_bytes()
-                .iter()
-                .copied()
-                .map(|v| v as usize)
-                .collect();
-
-            lengths.extend([17, 31, 73, 47, 23]);
-
-            let mut hash = vec![];
-            (0..=255).for_each(|num| hash.push(num as u8));
-
-            let mut position = 0;
-            let mut skip = 0;
-
-            // 64 rounds
-            (0..64).for_each(|_| {
-                for length in &lengths {
-                    reverse(&mut hash, position, *length);
-                    position += (*length + skip) % hash.len();
-                    skip += 1;
-                }
-            });
-
-            let used: u32 = hash
+            let used: u32 = sparse_hash
                 .chunks(16)
                 // densify [256] -> [16]
                 .map(|chunk| chunk.iter().copied().reduce(|acc, e| acc ^ e).unwrap())
@@ -128,41 +134,16 @@ fn region_mark(disk: &mut BitField128, col: usize, row: usize) {
     }
 }
 
-fn part2(input: &String) -> u32 {
+fn part2(input: &str) -> u32 {
     // How many regions are present given your key string?
     //
     let mut disk = Vec::<u8>::new();
 
     (0..128).for_each(|idx| {
-        let mut to_hash = input.clone();
-        to_hash.push('-');
-        to_hash.push_str(&idx.to_string());
+        let sparse_hash = calculate_sparse_hash(input, idx);
 
-        let mut lengths: Vec<usize> = to_hash
-            .as_bytes()
-            .iter()
-            .copied()
-            .map(|v| v as usize)
-            .collect();
-
-        lengths.extend([17, 31, 73, 47, 23]);
-
-        let mut hash = vec![];
-        (0..=255).for_each(|num| hash.push(num as u8));
-
-        let mut position = 0;
-        let mut skip = 0;
-
-        // 64 rounds
-        (0..64).for_each(|_| {
-            for length in &lengths {
-                reverse(&mut hash, position, *length);
-                position += (*length + skip) % hash.len();
-                skip += 1;
-            }
-        });
-
-        hash.chunks(16)
+        sparse_hash
+            .chunks(16)
             // densify [256] -> [16]
             .map(|chunk| chunk.iter().copied().reduce(|acc, e| acc ^ e).unwrap())
             .for_each(|num| disk.push(num));
