@@ -34,20 +34,20 @@ fn reverse(list: &mut Vec<u8>, position: usize, length: usize) {
 }
 
 fn part1(input: &Vec<usize>) -> u16 {
-    let mut list = vec![];
-    (0..=255).for_each(|num| list.push(num as u8));
+    let mut hash = vec![];
+    (0..=255).for_each(|num| hash.push(num as u8));
 
     let mut skip = 0;
     let mut position = 0;
 
     // one round
     for length in input {
-        reverse(&mut list, position, *length);
-        position += (*length + skip) % list.len();
+        reverse(&mut hash, position, *length);
+        position += (*length + skip) % hash.len();
         skip += 1;
     }
 
-    list[0] as u16 * list[1] as u16
+    hash[0] as u16 * hash[1] as u16
 }
 
 fn part2(input: &[u8]) -> String {
@@ -59,8 +59,8 @@ fn part2(input: &[u8]) -> String {
 
     lengths.extend([17, 31, 73, 47, 23]);
 
-    let mut list = vec![];
-    (0..=255).for_each(|num| list.push(num as u8));
+    let mut hash = vec![];
+    (0..=255).for_each(|num| hash.push(num as u8));
 
     let mut position = 0;
     let mut skip = 0;
@@ -68,13 +68,13 @@ fn part2(input: &[u8]) -> String {
     // 64 rounds
     (0..64).for_each(|_| {
         for length in &lengths {
-            reverse(&mut list, position, *length);
-            position += (*length + skip) % list.len();
+            reverse(&mut hash, position, *length);
+            position += (*length + skip) % hash.len();
             skip += 1;
         }
     });
 
-    let hash = list
+    let dense_hash = hash
         .chunks(16)
         // densify [256] -> [16]
         .map(|chunk| chunk.iter().copied().reduce(|acc, e| acc ^ e).unwrap())
@@ -83,7 +83,7 @@ fn part2(input: &[u8]) -> String {
         .collect::<Vec<String>>()
         .join("");
 
-    hash
+    dense_hash
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
