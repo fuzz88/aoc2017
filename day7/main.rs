@@ -52,7 +52,7 @@ fn read_input(filename: &str) -> Result<Tower, Box<dyn error::Error>> {
     let mut root_name = None;
     // n*log(n) to find root node
     for (name, ..) in &parsed_input {
-        match all_children.binary_search(&name) {
+        match all_children.binary_search(name) {
             Ok(..) => {
                 continue;
             }
@@ -64,7 +64,7 @@ fn read_input(filename: &str) -> Result<Tower, Box<dyn error::Error>> {
     }
     // return root node if found, or throw an fatal error
     if let Some(root_name) = root_name {
-        Ok(create_tower(&parsed_input, &root_name))
+        Ok(create_tower(&parsed_input, root_name))
     } else {
         Err("fatal error: no root node is found")?
     }

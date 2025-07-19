@@ -25,6 +25,7 @@ impl OP {
 }
 
 #[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
 enum COND {
     GT(Reg, i32),
     GTE(Reg, i32),
@@ -57,6 +58,7 @@ struct Instruction {
     condition: COND,
 }
 
+#[allow(clippy::upper_case_acronyms)]
 struct CPU {
     registers: HashMap<String, i32>,
     pc: usize,
@@ -80,26 +82,25 @@ impl CPU {
         *self.registers.entry(reg.to_string()).or_insert(0) += value;
     }
 
-    fn eval(&mut self, program: &Vec<Instruction>) {
+    fn eval(&mut self, program: &[Instruction]) {
         let mut pc = self.pc;
 
         loop {
-            match &program[pc] {
-                Instruction {
-                    operation: op,
-                    condition: cond,
-                } => {
-                    let get_reg = |reg: &str| self.get_reg(reg);
-                    if cond.is_true(get_reg) {
+            let Instruction {
+                operation: op,
+                condition: cond,
+            } = &program[pc];
 
-                        let update_reg = |reg: &str, value: i32| self.update_reg(reg, value);
-                        op.apply(update_reg);
+            let get_reg = |reg: &str| self.get_reg(reg);
 
-                        // compute highest register value for part2
-                        self.max_register_ever = self.max_register_ever.max(self.max_register());
-                    }
-                }
-            };
+            if cond.is_true(get_reg) {
+                let update_reg = |reg: &str, value: i32| self.update_reg(reg, value);
+                op.apply(update_reg);
+
+                // compute highest register value for part2
+                self.max_register_ever = self.max_register_ever.max(self.max_register());
+            }
+
             pc += 1;
             if pc == program.len() {
                 break;
@@ -152,13 +153,13 @@ fn parse_line(line: &str) -> Instruction {
 fn read_input(filename: &str) -> Result<Vec<Instruction>, Box<dyn error::Error>> {
     let instructions = fs::read_to_string(filename)?
         .lines()
-        .map(|line| parse_line(line))
+        .map(parse_line)
         .collect();
 
     Ok(instructions)
 }
 
-fn part1(program: &Vec<Instruction>) -> i32 {
+fn part1(program: &[Instruction]) -> i32 {
     // What is the largest value in any register
     // after completing the instructions in your puzzle input?
     let mut computer = CPU::new();
@@ -166,7 +167,7 @@ fn part1(program: &Vec<Instruction>) -> i32 {
     computer.max_register()
 }
 
-fn part2(program: &Vec<Instruction>) -> i32 {
+fn part2(program: &[Instruction]) -> i32 {
     // To be safe, the CPU also needs to know
     // the highest value held in any register during this process.
     let mut computer = CPU::new();

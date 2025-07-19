@@ -41,7 +41,7 @@ fn count_score_and_garbage(stream: &str) -> (u32, u32) {
             }
             b'<' => {
                 idx += 1;
-                while !(stream[idx] == b'>') {
+                while stream[idx] != b'>' {
                     if stream[idx] == b'!' {
                         idx += 2;
                     } else {
@@ -72,7 +72,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let (part1, part2) = count_score_and_garbage(&input_data);
 
-    println!("{}\n{}", part1, part2);
+    println!("{part1}\n{part2}");
 
     Ok(())
 }

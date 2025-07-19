@@ -11,7 +11,7 @@ fn read_input(filename: &str) -> Result<Vec<usize>, Box<dyn error::Error>> {
     Ok(lengths)
 }
 
-fn reverse(list: &mut Vec<u8>, position: usize, length: usize) {
+fn reverse(list: &mut [u8], position: usize, length: usize) {
     let end_pos = position + length - 1;
 
     let mut l = position % list.len();
@@ -20,12 +20,12 @@ fn reverse(list: &mut Vec<u8>, position: usize, length: usize) {
     while l != (position + length / 2) % list.len() {
         if l != h {
             // swap
-            list[l] = list[h] ^ list[l];
-            list[h] = list[l] ^ list[h];
-            list[l] = list[h] ^ list[l]
+            list[l] ^= list[h];
+            list[h] ^= list[l];
+            list[l] ^= list[h]
         }
         l += 1;
-        l = l % list.len();
+        l %= list.len();
         if h == 0 {
             h = list.len();
         }
@@ -33,18 +33,16 @@ fn reverse(list: &mut Vec<u8>, position: usize, length: usize) {
     }
 }
 
-fn part1(input: &Vec<usize>) -> u16 {
+fn part1(input: &[usize]) -> u16 {
     let mut hash = vec![];
     (0..=255).for_each(|num| hash.push(num as u8));
 
-    let mut skip = 0;
     let mut position = 0;
 
     // one round
-    for length in input {
+    for (skip, length) in input.iter().enumerate() {
         reverse(&mut hash, position, *length);
         position += (*length + skip) % hash.len();
-        skip += 1;
     }
 
     hash[0] as u16 * hash[1] as u16

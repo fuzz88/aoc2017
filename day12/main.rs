@@ -19,7 +19,7 @@ fn parse_line(line: &str) -> (u32, Vec<u32>) {
 fn read_input(filename: &str) -> Result<Graph, Box<dyn error::Error>> {
     let graph = fs::read_to_string(filename)?
         .lines()
-        .map(|line| parse_line(line))
+        .map(parse_line)
         .collect();
 
     Ok(graph)
@@ -75,12 +75,11 @@ fn part2(graph: &Graph) -> u32 {
     while let Some(start) = nodes.pop() {
         group_count += 1;
 
-        bfs(graph, start, |node| match nodes.binary_search(&node) {
-            Ok(index) => {
+        bfs(graph, start, |node| {
+            if let Ok(index) = nodes.binary_search(&node) {
                 // removing from sorted vec keeps it sorted.
                 nodes.remove(index);
             }
-            Err(_) => {}
         });
     }
 

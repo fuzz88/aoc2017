@@ -57,10 +57,10 @@ where
 fn part1(banks: &Banks) -> u32 {
     cycler(banks, |banks, states, _| {
         if states.contains(banks) {
-            return true;
+            true
         } else {
             states.insert(banks.clone());
-            return false;
+            false
         }
     })
 }
@@ -74,21 +74,19 @@ fn part2(banks: &Banks) -> u32 {
         if !first_seen {
             if *banks == state_seen {
                 // println!("{:?}", state_seen);
-                *steps = *steps - steps_seen;
-                return true;
+                *steps -= steps_seen;
+                true
             } else {
-                return false;
+                false
             }
+        } else if states.contains(banks) {
+            first_seen = false;
+            state_seen = banks.clone();
+            steps_seen = *steps;
+            false
         } else {
-            if states.contains(banks) {
-                first_seen = false;
-                state_seen = banks.clone();
-                steps_seen = *steps;
-                return false;
-            } else {
-                states.insert(banks.clone());
-                return false;
-            }
+            states.insert(banks.clone());
+            false
         }
     })
 }

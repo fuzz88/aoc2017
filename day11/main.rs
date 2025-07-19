@@ -86,7 +86,7 @@ fn read_input(filename: &str) -> Result<Vec<Dir>, Box<dyn error::Error>> {
     Ok(directions)
 }
 
-fn part1(directions: &Vec<Dir>) -> u32 {
+fn part1(directions: &[Dir]) -> u32 {
     // Starting where the child process started,
     // you need to determine the fewest number of steps required to reach him.
     let end_point = directions.iter().fold(HexPoint(0, 0), |point, direction| {
@@ -96,7 +96,7 @@ fn part1(directions: &Vec<Dir>) -> u32 {
     HexPoint(0, 0).axial_distance(end_point)
 }
 
-fn part2(directions: &Vec<Dir>) -> u32 {
+fn part2(directions: &[Dir]) -> u32 {
     // How many steps away is the furthest
     // the child process ever got from his starting position?
     let max_dist = directions

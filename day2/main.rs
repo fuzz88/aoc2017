@@ -11,13 +11,13 @@ fn parse_line(line: &str) -> Vec<u32> {
 fn read_input(filename: &str) -> Result<Vec<Vec<u32>>, Box<dyn error::Error>> {
     let spreadsheet = fs::read_to_string(filename)?
         .lines()
-        .map(|line| parse_line(line))
+        .map(parse_line)
         .collect();
 
     Ok(spreadsheet)
 }
 
-fn part1(table: &Vec<Vec<u32>>) -> u32 {
+fn part1(table: &[Vec<u32>]) -> u32 {
     table
         .iter()
         // .inspect(|row| println!("{:?}", row))
@@ -33,7 +33,7 @@ fn part1(table: &Vec<Vec<u32>>) -> u32 {
 fn get_goal(row: &Vec<u32>) -> u32 {
     for a in row {
         for b in row {
-            if a > b && a % b == 0 {
+            if a > b && a.is_multiple_of(*b) {
                 return a / b;
             }
         }
@@ -41,8 +41,8 @@ fn get_goal(row: &Vec<u32>) -> u32 {
     unreachable!("must be always a goal");
 }
 
-fn part2(table: &Vec<Vec<u32>>) -> u32 {
-    table.iter().map(|row| get_goal(row)).sum()
+fn part2(table: &[Vec<u32>]) -> u32 {
+    table.iter().map(get_goal).sum()
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {

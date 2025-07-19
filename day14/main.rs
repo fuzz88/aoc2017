@@ -28,7 +28,7 @@ impl BitField128 {
         let n_idx = idx / 8;
         let shift = 7 - idx % 8;
 
-        self.arr[n_idx] = self.arr[n_idx] & !(1 << shift);
+        self.arr[n_idx] &= !(1 << shift);
     }
 }
 
@@ -37,7 +37,7 @@ fn read_input(filename: &str) -> Result<String, Box<dyn error::Error>> {
 }
 
 #[inline(always)]
-fn reverse(list: &mut Vec<u8>, position: usize, length: usize) {
+fn reverse(list: &mut [u8], position: usize, length: usize) {
     let end_pos = position + length - 1;
 
     let mut l = position % list.len();
@@ -46,12 +46,12 @@ fn reverse(list: &mut Vec<u8>, position: usize, length: usize) {
     while l != (position + length / 2) % list.len() {
         if l != h {
             // swap
-            list[l] = list[l] ^ list[h];
-            list[h] = list[l] ^ list[h];
-            list[l] = list[l] ^ list[h]
+            list[l] ^= list[h];
+            list[h] ^= list[l];
+            list[l] ^= list[h]
         }
         l += 1;
-        l = l % list.len();
+        l %= list.len();
         if h == 0 {
             h = list.len();
         }

@@ -13,7 +13,7 @@ fn parse_line(line: &str) -> (u32, u32) {
 fn read_input(filename: &str) -> Result<Firewall, Box<dyn error::Error>> {
     let rules = fs::read_to_string(filename)?
         .lines()
-        .map(|line| parse_line(line))
+        .map(parse_line)
         .collect();
 
     Ok(rules)
@@ -31,7 +31,7 @@ fn part1(firewall: &Firewall) -> u32 {
             let time = idx;
             // ping-pong movement.
             // it's is rather simple to check for zero-position.
-            if time % (depth * 2 - 2) == 0 {
+            if time.is_multiple_of(depth * 2 - 2) {
                 severity += idx * depth;
             }
         }
@@ -51,7 +51,7 @@ fn part2(firewall: &Firewall) -> u32 {
         for idx in 0..=*max_layer {
             if let Some(depth) = firewall.get(&idx) {
                 let delayed = idx + delay;
-                if delayed % (depth * 2 - 2) == 0 {
+                if delayed.is_multiple_of(depth * 2 - 2) {
                     found = false;
                     break;
                 }

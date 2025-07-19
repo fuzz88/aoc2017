@@ -36,7 +36,7 @@ fn is_valid_1(pp: &&Passphrase) -> bool {
         .all(|(_, freq)| *freq == 1)
 }
 
-fn part1(pps: &Vec<Passphrase>) -> usize {
+fn part1(pps: &[Passphrase]) -> usize {
     pps.iter().filter(is_valid_1).count()
 }
 
@@ -69,7 +69,7 @@ fn is_valid_2(pp: &&Passphrase) -> bool {
     true
 }
 
-fn part2(pps: &Vec<Passphrase>) -> usize {
+fn part2(pps: &[Passphrase]) -> usize {
     pps.iter().filter(is_valid_2).count()
 }
 
