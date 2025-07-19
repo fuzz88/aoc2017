@@ -4,12 +4,12 @@ use std::error;
 use std::fs;
 
 #[derive(Debug)]
-struct BitField128<'a> {
-    arr: &'a mut [u8],
+struct BitField128 {
+    arr: Vec<u8>,
 }
 
-impl<'a> BitField128<'a> {
-    fn from_vec(numbers: &'a mut Vec<u8>) -> BitField128<'a> {
+impl BitField128 {
+    fn with_vec(numbers: Vec<u8>) -> Self {
         assert!(numbers.len() == 2048);
 
         BitField128 { arr: numbers }
@@ -133,9 +133,8 @@ fn region_mark(disk: &mut BitField128, col: usize, row: usize) {
 fn part2(input: &str) -> u32 {
     // How many regions are present given your key string?
 
-    let now = std::time::Instant::now();
-
-        let mut numbers = (0..128)
+    let mut disk = BitField128::with_vec(
+        (0..128)
             .flat_map(|idx| {
                 calculate_sparse_hash(input, idx)
                     .chunks(16)
@@ -143,8 +142,8 @@ fn part2(input: &str) -> u32 {
                     .map(|chunk| chunk.iter().copied().reduce(|acc, e| acc ^ e).unwrap())
                     .collect::<Vec<u8>>()
             })
-            .collect();
-    let mut disk = BitField128::from_vec(&mut numbers);
+            .collect(),
+    );
 
     let mut regions_count = 0;
 
@@ -156,8 +155,6 @@ fn part2(input: &str) -> u32 {
             }
         }
     }
-
-    println!("{:?}", now.elapsed());
 
     regions_count
 }
