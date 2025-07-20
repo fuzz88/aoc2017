@@ -3,7 +3,8 @@ use std::env;
 use std::error;
 use std::fs;
 
-#[derive(Debug)]
+type Moves = Vec<Move>;
+
 enum Move {
     Spin(usize),
     Exchange(usize, usize),
@@ -13,13 +14,13 @@ enum Move {
 impl Move {
     fn from_str(s: &str) -> Self {
         let sb = s.as_bytes();
+
         match &sb[0] {
             b's' => Move::Spin(s[1..].parse().unwrap()),
             b'x' => {
-                let programs: Vec<usize> =
-                    s[1..].split("/").map(|el| el.parse().unwrap()).collect();
+                let mut programs = s[1..].split("/").map(|el| el.parse().unwrap());
 
-                Move::Exchange(programs[0], programs[1])
+                Move::Exchange(programs.next().unwrap(), programs.next().unwrap())
             }
             b'p' => Move::Partner(sb[1], sb[3]),
             mv => unimplemented!("unknown move: {}", mv),
@@ -58,8 +59,6 @@ impl Move {
         };
     }
 }
-
-type Moves = Vec<Move>;
 
 fn read_input(filename: &str) -> Result<Moves, Box<dyn error::Error>> {
     let moves = fs::read_to_string(filename)?
