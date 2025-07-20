@@ -49,13 +49,7 @@ fn part1(init_values: &[u64]) -> usize {
     generator_a
         .zip(generator_b)
         .take(40_000_000)
-        .map(|(a, b)| {
-            if ((a << 48) >> 48) == ((b << 48) >> 48) {
-                1
-            } else {
-                0
-            }
-        })
+        .map(|(a, b)| ((a ^ b) & 0xFFFF == 0) as usize)
         .sum()
 }
 
@@ -76,13 +70,7 @@ fn part2(init_values: &[u64]) -> usize {
     generator_a
         .zip(generator_b)
         .take(5_000_000)
-        .map(|(a, b)| {
-            if ((a << 48) >> 48) == ((b << 48) >> 48) {
-                1
-            } else {
-                0
-            }
-        })
+        .map(|(a, b)| ((a ^ b) & 0xFFFF == 0) as usize)
         .sum()
 }
 
