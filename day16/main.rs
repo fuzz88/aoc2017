@@ -30,7 +30,7 @@ impl Move {
         }
     }
 
-    fn apply(&self, mut state: VecDeque<u8>) -> VecDeque<u8> {
+    fn apply_mut(&self, state: &mut VecDeque<u8>) {
         match self {
             Move::Spin(x) => {
                 state.rotate_right(*x);
@@ -60,8 +60,6 @@ impl Move {
                 state.swap(idx_a, idx_b);
             }
         };
-
-        state
     }
 }
 
@@ -78,14 +76,13 @@ fn read_input(filename: &str) -> Result<Moves, Box<dyn error::Error>> {
 }
 
 fn part1(moves: &[Move]) -> String {
-    let state: VecDeque<u8> = (b'a'..=b'p').collect();
+    let mut state: VecDeque<u8> = (b'a'..=b'p').collect();
 
-    moves
-        .iter()
-        .fold(state, |s, m| m.apply(s))
-        .iter()
-        .map(|c| *c as char)
-        .collect()
+    moves.iter().for_each(|m| {
+        m.apply_mut(&mut state);
+    });
+
+    state.iter().map(|c| *c as char).collect()
 }
 
 fn part2(moves: &[Move]) -> String {
@@ -94,7 +91,9 @@ fn part2(moves: &[Move]) -> String {
     // dance is cycled somehow
     // no need to do 1 billion iterations.
     (0..100).for_each(|_| {
-        state = moves.iter().fold(state.clone(), |s, m| m.apply(s));
+        moves.iter().for_each(|m| {
+            m.apply_mut(&mut state);
+        });
     });
 
     state.iter().map(|c| *c as char).collect()
