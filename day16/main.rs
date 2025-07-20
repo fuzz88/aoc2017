@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::env;
 use std::error;
 use std::fs;
@@ -27,6 +28,29 @@ impl Move {
             mv => unimplemented!("unknown move: {}", mv),
         }
     }
+
+    fn apply(&self, state: VecDeque<u8>) -> VecDeque<u8> {
+        let mut state = state.clone();
+
+        match self {
+            Move::Spin(x) => {
+                (0..*x).for_each(|_| {
+                    let el = state.pop_back().unwrap();
+                    state.push_front(el);
+                });
+            }
+            Move::Exchange(a, b) => {
+                state.swap(*a, *b);
+            }
+            Move::Partner(a, b) => {
+                let a = state.iter().position(|x| x == a).unwrap();
+                let b = state.iter().position(|x| x == b).unwrap();
+                state.swap(a, b);
+            }
+        };
+
+        state
+    }
 }
 
 type Moves = Vec<Move>;
@@ -41,6 +65,28 @@ fn read_input(filename: &str) -> Result<Moves, Box<dyn error::Error>> {
     Ok(moves)
 }
 
+fn part1(moves: &[Move]) -> String {
+    let state: VecDeque<u8> = (b'a'..=b'p').collect();
+
+    moves
+        .iter()
+        .fold(state, |s, m| m.apply(s))
+        .iter()
+        .map(|c| *c as char)
+        .collect()
+}
+
+fn part2(moves: &[Move]) -> String {
+    let mut state: VecDeque<u8> = (b'a'..=b'p').collect();
+    
+    // dance is cycled somehow
+    (0..100).for_each(|_| {
+        state = moves.iter().fold(state.clone(), |s, m| m.apply(s));
+    });
+
+    state.iter().map(|c| *c as char).collect()
+}
+
 fn main() -> Result<(), Box<dyn error::Error>> {
     println!("--- Day16: Permutation Promenade ---");
 
@@ -50,7 +96,8 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let input_data = read_input(&input_file)?;
 
-    println!("{:?}", &input_data);
+    println!("{}", part1(&input_data));
+    println!("{}", part2(&input_data));
 
     Ok(())
 }
