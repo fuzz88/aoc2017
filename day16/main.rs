@@ -30,21 +30,21 @@ impl Move {
     }
 
     fn apply(&self, mut state: VecDeque<u8>) -> VecDeque<u8> {
-
         match self {
             Move::Spin(x) => {
-                (0..*x).for_each(|_| {
-                    let el = state.pop_back().unwrap();
-                    state.push_front(el);
-                });
+                state.rotate_right(*x);
             }
             Move::Exchange(a, b) => {
                 state.swap(*a, *b);
             }
             Move::Partner(a, b) => {
-                let a = state.iter().position(|x| x == a).unwrap();
-                let b = state.iter().position(|x| x == b).unwrap();
-                state.swap(a, b);
+                let (idx_a, idx_b) = state.iter().enumerate().fold((0, 0), |idxs, (idx, x)| {
+                    (
+                        if x == a { idx } else { idxs.0 },
+                        if x == b { idx } else { idxs.1 },
+                    )
+                });
+                state.swap(idx_a, idx_b);
             }
         };
 
@@ -77,8 +77,9 @@ fn part1(moves: &[Move]) -> String {
 
 fn part2(moves: &[Move]) -> String {
     let mut state: VecDeque<u8> = (b'a'..=b'p').collect();
-    
+
     // dance is cycled somehow
+    // no need to do 1 billion iterations.
     (0..100).for_each(|_| {
         state = moves.iter().fold(state.clone(), |s, m| m.apply(s));
     });
