@@ -22,6 +22,7 @@ impl Move {
                     .split("/")
                     .map(|el| el.parse().unwrap())
                     .collect();
+
                 Move::Exchange(programs[0], programs[1])
             }
             b'p' => Move::Partner(sb[1], sb[3]),
@@ -38,12 +39,24 @@ impl Move {
                 state.swap(*a, *b);
             }
             Move::Partner(a, b) => {
-                let (idx_a, idx_b) = state.iter().enumerate().fold((0, 0), |idxs, (idx, x)| {
-                    (
-                        if x == a { idx } else { idxs.0 },
-                        if x == b { idx } else { idxs.1 },
-                    )
-                });
+                let mut idx_a = 0;
+                let mut idx_b = 0;
+                let mut count = 0;
+
+                for (idx, x) in state.iter().enumerate() {
+                    if x == a {
+                        idx_a = idx;
+                        count += 1;
+                    }
+                    if x == b {
+                        idx_b = idx;
+                        count += 1;
+                    }
+                    if count == 2 {
+                        break;
+                    }
+                }
+
                 state.swap(idx_a, idx_b);
             }
         };
