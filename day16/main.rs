@@ -14,14 +14,10 @@ impl Move {
     fn from_str(s: &str) -> Self {
         let sb = s.as_bytes();
         match &sb[0] {
-            b's' => Move::Spin(s.split_at(1).1.parse().unwrap()),
+            b's' => Move::Spin(s[1..].parse().unwrap()),
             b'x' => {
-                let programs: Vec<usize> = s
-                    .split_at(1)
-                    .1
-                    .split("/")
-                    .map(|el| el.parse().unwrap())
-                    .collect();
+                let programs: Vec<usize> =
+                    s[1..].split("/").map(|el| el.parse().unwrap()).collect();
 
                 Move::Exchange(programs[0], programs[1])
             }
