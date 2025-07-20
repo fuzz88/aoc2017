@@ -29,8 +29,7 @@ impl Move {
         }
     }
 
-    fn apply(&self, state: VecDeque<u8>) -> VecDeque<u8> {
-        let mut state = state.clone();
+    fn apply(&self, mut state: VecDeque<u8>) -> VecDeque<u8> {
 
         match self {
             Move::Spin(x) => {
