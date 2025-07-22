@@ -67,23 +67,48 @@ impl From<&str> for Instruction {
     }
 }
 
+impl Instruction {
+    fn apply_mut<F>(&self, cpu: &mut CPU<F>)
+    where
+        F: FnMut(&Instruction, &Registers) -> Option<isize>,
+    {
+        match self {
+            instruction => unimplemented!("unknown instruction: {:?}", instruction),
+        }
+    }
+}
+
 type Registers = HashMap<char, isize>;
 
 struct CPU<F>
 where
-    F: Fn(&Instruction, &Registers) -> Option<isize>,
+    F: FnMut(&Instruction, &Registers) -> Option<isize>,
 {
     registers: Registers,
     pc: usize,
     trap: F,
 }
 
-impl<F: Fn(&Instruction, &Registers) -> Option<isize>> CPU<F> {
+impl<F: FnMut(&Instruction, &Registers) -> Option<isize>> CPU<F> {
     fn new(trap: F) -> Self {
         CPU {
             registers: HashMap::new(),
             pc: 0,
             trap,
+        }
+    }
+
+    fn eval(&mut self, instructions: &[Instruction]) -> isize {
+        loop {
+            let next_instruction = &instructions[self.pc];
+
+            if let Some(value) = (self.trap)(next_instruction, &self.registers) {
+                return value;
+            };
+
+            next_instruction.apply_mut(self);
+
+            self.pc += 1;
         }
     }
 }
@@ -98,12 +123,37 @@ fn read_input(filename: &str) -> Result<Vec<Instruction>, Box<dyn error::Error>>
 }
 
 fn part1(instructions: &[Instruction]) -> isize {
-    let cpu = CPU::new(|instruction, registers| {
+    let mut last_freq = 0;
+
+    let mut cpu = CPU::new(|instruction, registers| {
         println!("trapped: {:?}", instruction);
+        match instruction {
+            Instruction::Snd(operand) => match operand {
+                Operand::Register(name) => {
+                    last_freq = *registers.get(name).unwrap();
+                }
+                Operand::Value(value) => {
+                    last_freq = *value;
+                }
+            },
+            Instruction::Rcv(operand) => match operand {
+                Operand::Register(name) => {
+                    if *registers.get(name).unwrap() != 0 {
+                        return Some(last_freq);
+                    }
+                }
+                Operand::Value(value) => {
+                    if *value != 0 {
+                        return Some(last_freq);
+                    }
+                }
+            },
+            _ => {}
+        };
         None
     });
 
-    0
+    cpu.eval(instructions)
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
