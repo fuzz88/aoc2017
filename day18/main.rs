@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::env;
 use std::error;
 use std::fs;
@@ -37,6 +38,10 @@ impl From<&str> for Instruction {
         let mut components = value.split_whitespace();
 
         match components.next().unwrap() {
+            // one operand
+            "snd" => Instruction::Snd(Operand::from(components.next().unwrap())),
+            "rcv" => Instruction::Rcv(Operand::from(components.next().unwrap())),
+            // two operands
             "set" => Instruction::Set(
                 Operand::from(components.next().unwrap()),
                 Operand::from(components.next().unwrap()),
@@ -53,17 +58,32 @@ impl From<&str> for Instruction {
                 Operand::from(components.next().unwrap()),
                 Operand::from(components.next().unwrap()),
             ),
-            "snd" => Instruction::Snd(
-                Operand::from(components.next().unwrap()),
-            ),
-            "rcv" => Instruction::Rcv(
-                Operand::from(components.next().unwrap()),
-            ),
             "jgz" => Instruction::Jgz(
                 Operand::from(components.next().unwrap()),
                 Operand::from(components.next().unwrap()),
             ),
             instruction => unimplemented!("unknown instruction: {}", instruction),
+        }
+    }
+}
+
+type Registers = HashMap<char, isize>;
+
+struct CPU<F>
+where
+    F: Fn(&Instruction, &Registers) -> Option<isize>,
+{
+    registers: Registers,
+    pc: usize,
+    trap: F,
+}
+
+impl<F: Fn(&Instruction, &Registers) -> Option<isize>> CPU<F> {
+    fn new(trap: F) -> Self {
+        CPU {
+            registers: HashMap::new(),
+            pc: 0,
+            trap,
         }
     }
 }
@@ -77,6 +97,15 @@ fn read_input(filename: &str) -> Result<Vec<Instruction>, Box<dyn error::Error>>
     Ok(instructions)
 }
 
+fn part1(instructions: &[Instruction]) -> isize {
+    let cpu = CPU::new(|instruction, registers| {
+        println!("trapped: {:?}", instruction);
+        None
+    });
+
+    0
+}
+
 fn main() -> Result<(), Box<dyn error::Error>> {
     println!("--- Day18: Duet ---");
 
@@ -86,7 +115,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let input_data = read_input(&input_file)?;
 
-    println!("{:?}", input_data);
+    println!("{}", part1(&input_data));
 
     Ok(())
 }
