@@ -23,6 +23,15 @@ impl From<&str> for Operand {
     }
 }
 
+impl Operand {
+    fn get_value(&self, registers: &mut Registers) -> isize {
+        match self {
+            Operand::Register(op_name) => *registers.entry(*op_name).or_insert(0),
+            Operand::Value(op_value) => *op_value,
+        }
+    }
+}
+
 #[derive(Debug)]
 enum Instruction {
     Snd(Operand),
@@ -74,53 +83,25 @@ impl Instruction {
         F: FnMut(&Instruction, &mut Registers) -> bool,
     {
         match self {
-            Instruction::Set(register, operand) => {
-                if let Operand::Register(reg_name) = register {
-                    let value = match operand {
-                        Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0),
-                        Operand::Value(op_value) => *op_value,
-                    };
-
-                    let register = cpu.registers.entry(*reg_name).or_insert(0);
-                    *register = value;
-                    cpu.pc += 1;
-                }
+            Instruction::Set(Operand::Register(reg_name), operand) => {
+                *cpu.registers.entry(*reg_name).or_insert(0) =
+                    operand.get_value(&mut cpu.registers);
+                cpu.pc += 1;
             }
-            Instruction::Add(register, operand) => {
-                if let Operand::Register(reg_name) = register {
-                    let value = match operand {
-                        Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0),
-                        Operand::Value(op_value) => *op_value,
-                    };
-
-                    let register = cpu.registers.entry(*reg_name).or_insert(0);
-                    *register += value;
-                    cpu.pc += 1;
-                }
+            Instruction::Add(Operand::Register(reg_name), operand) => {
+                *cpu.registers.entry(*reg_name).or_insert(0) +=
+                    operand.get_value(&mut cpu.registers);
+                cpu.pc += 1;
             }
-            Instruction::Mul(register, operand) => {
-                if let Operand::Register(reg_name) = register {
-                    let value = match operand {
-                        Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0),
-                        Operand::Value(op_value) => *op_value,
-                    };
-
-                    let register = cpu.registers.entry(*reg_name).or_insert(0);
-                    *register *= value;
-                    cpu.pc += 1;
-                }
+            Instruction::Mul(Operand::Register(reg_name), operand) => {
+                *cpu.registers.entry(*reg_name).or_insert(0) *=
+                    operand.get_value(&mut cpu.registers);
+                cpu.pc += 1;
             }
-            Instruction::Mod(register, operand) => {
-                if let Operand::Register(reg_name) = register {
-                    let value = match operand {
-                        Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0),
-                        Operand::Value(op_value) => *op_value,
-                    };
-
-                    let register = cpu.registers.entry(*reg_name).or_insert(0);
-                    *register %= value;
-                    cpu.pc += 1;
-                }
+            Instruction::Mod(Operand::Register(reg_name), operand) => {
+                *cpu.registers.entry(*reg_name).or_insert(0) %=
+                    operand.get_value(&mut cpu.registers);
+                cpu.pc += 1;
             }
             Instruction::Snd(..) => {
                 // processed via trap
@@ -131,20 +112,16 @@ impl Instruction {
                 cpu.pc += 1;
             }
             Instruction::Jgz(operand1, operand2) => {
-                let is_jmp = match operand1 {
-                    Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0) > 0,
-                    Operand::Value(op_value) => *op_value > 0,
-                };
-                let offset = match operand2 {
-                    Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0),
-                    Operand::Value(op_value) => *op_value,
-                };
+                let is_jmp = operand1.get_value(&mut cpu.registers) > 0;
+                let offset = operand2.get_value(&mut cpu.registers);
+
                 if is_jmp {
                     cpu.pc += offset;
                 } else {
                     cpu.pc += 1;
                 }
             }
+            instruction => unimplemented!("unknown instruction: {:?}", instruction),
         }
     }
 }
@@ -212,25 +189,14 @@ fn part1(instructions: &[Instruction]) -> isize {
     let mut cpu = CPU::new(|instruction, registers| {
         match instruction {
             Instruction::Snd(operand) => {
-                let value = match operand {
-                    Operand::Register(op_name) => *registers.entry(*op_name).or_insert(0),
-                    Operand::Value(op_value) => *op_value,
-                };
                 // save last played frequency into `~` register
-                *registers.entry('~').or_insert(0) = value;
+                *registers.entry('~').or_insert(0) = operand.get_value(registers);
             }
-            Instruction::Rcv(operand) => match operand {
-                Operand::Register(name) => {
-                    if *registers.get(name).unwrap() != 0 {
-                        return true;
-                    }
+            Instruction::Rcv(operand) => {
+                if operand.get_value(registers) != 0 {
+                    return true;
                 }
-                Operand::Value(value) => {
-                    if *value != 0 {
-                        return true;
-                    }
-                }
-            },
+            }
             _ => {}
         };
         false
@@ -251,11 +217,7 @@ fn part2(instructions: &[Instruction]) -> usize {
     let mut cpu0 = CPU::new(|instruction, registers| {
         match instruction {
             Instruction::Snd(operand) => {
-                let value = match operand {
-                    Operand::Register(op_name) => *registers.entry(*op_name).or_insert(0),
-                    Operand::Value(op_value) => *op_value,
-                };
-                queue1.borrow_mut().push_back(value);
+                queue1.borrow_mut().push_back(operand.get_value(registers));
                 // use `~` register as a counter
                 *registers.entry('~').or_insert(0) += 1;
             }
@@ -275,11 +237,7 @@ fn part2(instructions: &[Instruction]) -> usize {
     let mut cpu1 = CPU::new(|instruction, registers| {
         match instruction {
             Instruction::Snd(operand) => {
-                let value = match operand {
-                    Operand::Register(op_name) => *registers.entry(*op_name).or_insert(0),
-                    Operand::Value(op_value) => *op_value,
-                };
-                queue0.borrow_mut().push_back(value);
+                queue0.borrow_mut().push_back(operand.get_value(registers));
                 // use `~` register as a counter
                 *registers.entry('~').or_insert(0) += 1;
             }
