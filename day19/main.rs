@@ -7,9 +7,7 @@ type Map = Vec<u8>;
 fn read_input(filename: &str) -> Result<Map, Box<dyn error::Error>> {
     let map = fs::read_to_string(filename)?
         .as_bytes()
-        .iter()
-        .copied()
-        .collect();
+        .to_vec();
 
     Ok(map)
 }
@@ -46,7 +44,7 @@ where
             visit(map[current_point as usize]);
 
             dy = 0;
-            if current_point - 1 >= 0 && map[current_point as usize - 1] != b' ' {
+            if current_point > 0 && map[current_point as usize - 1] != b' ' {
                 dx = -1;
             }
             if current_point as usize + 1 < map.len() && map[current_point as usize + 1] != b' ' {
