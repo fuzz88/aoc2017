@@ -71,7 +71,7 @@ impl From<&str> for Instruction {
 impl Instruction {
     fn apply_mut<F>(&self, cpu: &mut CPU<F>)
     where
-        F: FnMut(&Instruction, &mut Registers) -> Option<isize>,
+        F: FnMut(&Instruction, &mut Registers) -> bool,
     {
         match self {
             Instruction::Set(register, operand) => {
@@ -154,7 +154,7 @@ type Registers = HashMap<char, isize>;
 #[allow(clippy::upper_case_acronyms)]
 struct CPU<F>
 where
-    F: FnMut(&Instruction, &mut Registers) -> Option<isize>,
+    F: FnMut(&Instruction, &mut Registers) -> bool,
 {
     registers: Registers,
     pc: isize,
@@ -162,7 +162,7 @@ where
     is_waiting: bool,
 }
 
-impl<F: FnMut(&Instruction, &mut Registers) -> Option<isize>> CPU<F> {
+impl<F: FnMut(&Instruction, &mut Registers) -> bool> CPU<F> {
     fn new(trap: F) -> Self {
         CPU {
             registers: HashMap::new(),
@@ -172,7 +172,7 @@ impl<F: FnMut(&Instruction, &mut Registers) -> Option<isize>> CPU<F> {
         }
     }
 
-    fn eval(&mut self, instructions: &[Instruction]) -> isize {
+    fn eval(&mut self, instructions: &[Instruction]) {
         loop {
             let next_instruction = &instructions[self.pc as usize];
 
@@ -180,9 +180,9 @@ impl<F: FnMut(&Instruction, &mut Registers) -> Option<isize>> CPU<F> {
             // println!("{:?}", next_instruction);
             // std::thread::sleep(std::time::Duration::from_millis(1000));
 
-            if let Some(value) = (self.trap)(next_instruction, &mut self.registers) {
+            if (self.trap)(next_instruction, &mut self.registers) {
                 self.is_waiting = true;
-                return value;
+                break;
             };
 
             self.is_waiting = false;
@@ -190,7 +190,7 @@ impl<F: FnMut(&Instruction, &mut Registers) -> Option<isize>> CPU<F> {
             next_instruction.apply_mut(self);
 
             if self.pc as usize >= instructions.len() {
-                return 0;
+                break;
             }
         }
     }
@@ -222,21 +222,23 @@ fn part1(instructions: &[Instruction]) -> isize {
             Instruction::Rcv(operand) => match operand {
                 Operand::Register(name) => {
                     if *registers.get(name).unwrap() != 0 {
-                        return Some(*registers.get(&'~').unwrap());
+                        return true;
                     }
                 }
                 Operand::Value(value) => {
                     if *value != 0 {
-                        return Some(*registers.get(&'~').unwrap());
+                        return true;
                     }
                 }
             },
             _ => {}
         };
-        None
+        false
     });
 
-    cpu.eval(instructions)
+    cpu.eval(instructions);
+
+    *cpu.registers.get(&'~').unwrap()
 }
 
 fn part2(instructions: &[Instruction]) -> usize {
@@ -261,12 +263,12 @@ fn part2(instructions: &[Instruction]) -> usize {
                 if let Some(value) = queue0.borrow_mut().pop_front() {
                     *registers.entry(*name).or_insert(0) = value;
                 } else {
-                    return Some(0);
+                    return true;
                 }
             }
             _ => {}
         };
-        None
+        false
     });
     cpu0.registers.entry('p').or_insert(0);
 
@@ -285,12 +287,12 @@ fn part2(instructions: &[Instruction]) -> usize {
                 if let Some(value) = queue1.borrow_mut().pop_front() {
                     *registers.entry(*name).or_insert(0) = value;
                 } else {
-                    return Some(0);
+                    return true;
                 }
             }
             _ => {}
         };
-        None
+        false
     });
     cpu1.registers.entry('p').or_insert(1);
 
