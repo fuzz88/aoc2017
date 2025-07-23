@@ -58,7 +58,15 @@ fn read_input(filename: &str) -> Result<Vec<Particle>, Box<dyn error::Error>> {
 fn part1(particles: &[Particle]) -> usize {
     // Which particle will stay closest to position <0,0,0> in the long term?
 
-    let min_accel = particles
+    // i guess that "in the long term" means "infinity", so
+    // first we need to find particles with the lowest acceleration,
+    // because in the long term these particles will scatter less.
+    // but if accelerations are equal, we must look for particles with the lowest velocity.
+    // and if, for example, we have particles moving equally slow,
+    // or if they don't move at all,
+    // closest to <0, 0, 0> will stay the one which is already closest.
+
+    particles
         .iter()
         .enumerate()
         .map(|(idx, particle)| {
@@ -68,13 +76,28 @@ fn part1(particles: &[Particle]) -> usize {
                     .iter()
                     .copied()
                     .fold(0, |acc, c| acc + i32::abs(c)),
+                particle
+                    .velocity
+                    .iter()
+                    .copied()
+                    .fold(0, |acc, c| acc + i32::abs(c)),
+                particle
+                    .position
+                    .iter()
+                    .copied()
+                    .fold(0, |acc, c| acc + i32::abs(c)),
                 idx,
             )
         })
+        // compares tuples lexicographically.
         .min()
-        .unwrap();
+        .unwrap()
+        .3
+}
 
-    min_accel.1
+fn part2(particles: &[Particle]) -> usize {
+    // How many particles are left after all collisions are resolved?
+    0
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
@@ -87,6 +110,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let input_data = read_input(&input_file)?;
 
     println!("{}", part1(&input_data));
+    println!("{}", part2(&input_data));
 
     Ok(())
 }
