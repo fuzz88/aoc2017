@@ -5,9 +5,9 @@ use std::fs;
 #[rustfmt::skip]
 #[derive(Debug, Clone)]
 struct Particle {
-    position:       [i32; 3],
-    velocity:       [i32; 3],
-    acceleration:   [i32; 3],
+    position:       [i64; 3],
+    velocity:       [i64; 3],
+    acceleration:   [i64; 3],
 }
 
 impl From<&str> for Particle {
@@ -75,17 +75,17 @@ fn part1(particles: &[Particle]) -> usize {
                     .acceleration
                     .iter()
                     .copied()
-                    .fold(0, |acc, c| acc + i32::abs(c)),
+                    .fold(0, |acc, c| acc + i64::abs(c)),
                 particle
                     .velocity
                     .iter()
                     .copied()
-                    .fold(0, |acc, c| acc + i32::abs(c)),
+                    .fold(0, |acc, c| acc + i64::abs(c)),
                 particle
                     .position
                     .iter()
                     .copied()
-                    .fold(0, |acc, c| acc + i32::abs(c)),
+                    .fold(0, |acc, c| acc + i64::abs(c)),
                 idx,
             )
         })
@@ -96,24 +96,27 @@ fn part1(particles: &[Particle]) -> usize {
 }
 
 fn filter_collided(particles: &mut Vec<Particle>) -> &Vec<Particle> {
+
     particles.sort_by_key(|el| el.position);
 
     let mut c = 1;
+    let mut removing = false;
 
     loop {
         if c >= particles.len() {
             break;
         }
-        if particles[c-1].position == particles[c].position {
-            
+        if particles[c - 1].position == particles[c].position {
+            removing = true;
+            particles.remove(c - 1);
+        } else {
+            if removing {
+                particles.remove(c - 1);
+                removing = false;
+            } else {
+                c += 1;
+            }
         }
-        c += 1;
-    }
-
-    idxs.dedup();
-
-    for idx in idxs {
-        particles.remove(idx);
     }
 
     particles
@@ -122,10 +125,12 @@ fn filter_collided(particles: &mut Vec<Particle>) -> &Vec<Particle> {
 fn part2(particles: &Vec<Particle>) -> usize {
     // How many particles are left after all collisions are resolved?
 
-    let mut n = 1000000;
+    let mut n = 10_000;
     let mut particles = particles.clone();
 
     while n != 0 {
+        particles = filter_collided(&mut particles).to_vec();
+
         particles = particles
             .iter()
             .map(|p| {
@@ -140,7 +145,6 @@ fn part2(particles: &Vec<Particle>) -> usize {
             })
             .collect();
 
-        particles = filter_collided(&mut particles).to_vec();
         n -= 1;
     }
 
