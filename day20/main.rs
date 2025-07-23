@@ -3,7 +3,7 @@ use std::error;
 use std::fs;
 
 #[rustfmt::skip]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Particle {
     position:       [i32; 3],
     velocity:       [i32; 3],
@@ -95,9 +95,56 @@ fn part1(particles: &[Particle]) -> usize {
         .3
 }
 
-fn part2(particles: &[Particle]) -> usize {
+fn filter_collided(particles: &mut Vec<Particle>) -> &Vec<Particle> {
+    particles.sort_by_key(|el| el.position);
+
+    let mut c = 1;
+
+    loop {
+        if c >= particles.len() {
+            break;
+        }
+        if particles[c-1].position == particles[c].position {
+            
+        }
+        c += 1;
+    }
+
+    idxs.dedup();
+
+    for idx in idxs {
+        particles.remove(idx);
+    }
+
+    particles
+}
+
+fn part2(particles: &Vec<Particle>) -> usize {
     // How many particles are left after all collisions are resolved?
-    0
+
+    let mut n = 1000000;
+    let mut particles = particles.clone();
+
+    while n != 0 {
+        particles = particles
+            .iter()
+            .map(|p| {
+                let mut p = p.clone();
+                p.velocity[0] += p.acceleration[0];
+                p.position[0] += p.velocity[0];
+                p.velocity[1] += p.acceleration[1];
+                p.position[1] += p.velocity[1];
+                p.velocity[2] += p.acceleration[2];
+                p.position[2] += p.velocity[2];
+                p
+            })
+            .collect();
+
+        particles = filter_collided(&mut particles).to_vec();
+        n -= 1;
+    }
+
+    particles.len()
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
