@@ -10,6 +10,17 @@ struct Particle {
     acceleration:   [i64; 3],
 }
 
+impl Particle {
+    fn update(&mut self) {
+        self.velocity[0] += self.acceleration[0];
+        self.position[0] += self.velocity[0];
+        self.velocity[1] += self.acceleration[1];
+        self.position[1] += self.velocity[1];
+        self.velocity[2] += self.acceleration[2];
+        self.position[2] += self.velocity[2];
+    }
+}
+
 impl From<&str> for Particle {
     fn from(value: &str) -> Self {
         let mut components = value.split(", ");
@@ -95,8 +106,7 @@ fn part1(particles: &[Particle]) -> usize {
         .3
 }
 
-fn filter_collided(particles: &mut Vec<Particle>) -> &Vec<Particle> {
-
+fn filter_out_collided(particles: &mut Vec<Particle>) {
     particles.sort_by_key(|el| el.position);
 
     let mut c = 1;
@@ -118,34 +128,29 @@ fn filter_collided(particles: &mut Vec<Particle>) -> &Vec<Particle> {
             }
         }
     }
+}
 
-    particles
+fn get_pairs_distances(particles: &Vec<Particle>) -> Vec<u64> {
+    vec![]
 }
 
 fn part2(particles: &Vec<Particle>) -> usize {
     // How many particles are left after all collisions are resolved?
 
     // idk how to check if all collisions are resolved.
-    // just checking 10k ticks.
-    let mut n = 10_000;
+    // maybe it makes sense to calculate distances between pairs,
+    // and couple of times check that distances are growing.
+
+    // just checking million ticks.
+    let mut n = 1_000_000;
     let mut particles = particles.clone();
 
     while n != 0 {
-        particles = filter_collided(&mut particles).to_vec();
+        filter_out_collided(&mut particles);
 
-        particles = particles
-            .iter()
-            .map(|p| {
-                let mut p = p.clone();
-                p.velocity[0] += p.acceleration[0];
-                p.position[0] += p.velocity[0];
-                p.velocity[1] += p.acceleration[1];
-                p.position[1] += p.velocity[1];
-                p.velocity[2] += p.acceleration[2];
-                p.position[2] += p.velocity[2];
-                p
-            })
-            .collect();
+        particles.iter_mut().for_each(|p| {
+            p.update();
+        });
 
         n -= 1;
     }
