@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+use std::cell::RefCell;
+use std::collections::{HashMap, VecDeque};
 use std::env;
 use std::error;
 use std::fs;
@@ -70,7 +71,7 @@ impl From<&str> for Instruction {
 impl Instruction {
     fn apply_mut<F>(&self, cpu: &mut CPU<F>)
     where
-        F: FnMut(&Instruction, &Registers) -> Option<isize>,
+        F: FnMut(&Instruction, &mut Registers) -> Option<isize>,
     {
         match self {
             Instruction::Set(register, operand) => {
@@ -121,13 +122,8 @@ impl Instruction {
                     cpu.pc += 1;
                 }
             }
-            Instruction::Snd(operand) => {
-                let value = match operand {
-                    Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0),
-                    Operand::Value(op_value) => *op_value,
-                };
-                let register = cpu.registers.entry('~').or_insert(0);
-                *register = value;
+            Instruction::Snd(..) => {
+                // processed via trap
                 cpu.pc += 1;
             }
             Instruction::Rcv(..) => {
@@ -155,21 +151,24 @@ impl Instruction {
 
 type Registers = HashMap<char, isize>;
 
+#[allow(clippy::upper_case_acronyms)]
 struct CPU<F>
 where
-    F: FnMut(&Instruction, &Registers) -> Option<isize>,
+    F: FnMut(&Instruction, &mut Registers) -> Option<isize>,
 {
     registers: Registers,
     pc: isize,
     trap: F,
+    is_waiting: bool,
 }
 
-impl<F: FnMut(&Instruction, &Registers) -> Option<isize>> CPU<F> {
+impl<F: FnMut(&Instruction, &mut Registers) -> Option<isize>> CPU<F> {
     fn new(trap: F) -> Self {
         CPU {
             registers: HashMap::new(),
             pc: 0,
             trap,
+            is_waiting: false,
         }
     }
 
@@ -177,15 +176,18 @@ impl<F: FnMut(&Instruction, &Registers) -> Option<isize>> CPU<F> {
         loop {
             let next_instruction = &instructions[self.pc as usize];
 
-            if let Some(value) = (self.trap)(next_instruction, &self.registers) {
+            // println!("{}", self.pc);
+            // println!("{:?}", next_instruction);
+            // std::thread::sleep(std::time::Duration::from_millis(1000));
+
+            if let Some(value) = (self.trap)(next_instruction, &mut self.registers) {
+                self.is_waiting = true;
                 return value;
             };
 
-            next_instruction.apply_mut(self);
+            self.is_waiting = false;
 
-            // println!("{}", self.pc);
-            // println!("{:?}", next_instruction);
-            // std::thread::sleep(std::time::Duration::from_millis(2000));
+            next_instruction.apply_mut(self);
 
             if self.pc as usize >= instructions.len() {
                 return 0;
@@ -209,6 +211,14 @@ fn part1(instructions: &[Instruction]) -> isize {
     // the first time a rcv instruction is executed with a non-zero value?
     let mut cpu = CPU::new(|instruction, registers| {
         match instruction {
+            Instruction::Snd(operand) => {
+                let value = match operand {
+                    Operand::Register(op_name) => *registers.entry(*op_name).or_insert(0),
+                    Operand::Value(op_value) => *op_value,
+                };
+                // save last played frequency into `~` register
+                *registers.entry('~').or_insert(0) = value;
+            }
             Instruction::Rcv(operand) => match operand {
                 Operand::Register(name) => {
                     if *registers.get(name).unwrap() != 0 {
@@ -229,6 +239,77 @@ fn part1(instructions: &[Instruction]) -> isize {
     cpu.eval(instructions)
 }
 
+fn part2(instructions: &[Instruction]) -> usize {
+    // Once both of your programs have terminated
+    // (regardless of what caused them to do so),
+    // how many times did program 1 send a value?
+    let queue0 = RefCell::new(VecDeque::new());
+    let queue1 = RefCell::new(VecDeque::new());
+
+    let mut cpu0 = CPU::new(|instruction, registers| {
+        match instruction {
+            Instruction::Snd(operand) => {
+                let value = match operand {
+                    Operand::Register(op_name) => *registers.entry(*op_name).or_insert(0),
+                    Operand::Value(op_value) => *op_value,
+                };
+                queue1.borrow_mut().push_back(value);
+                // use `~` register as a counter
+                *registers.entry('~').or_insert(0) += 1;
+            }
+            Instruction::Rcv(Operand::Register(name)) => {
+                if let Some(value) = queue0.borrow_mut().pop_front() {
+                    *registers.entry(*name).or_insert(0) = value;
+                } else {
+                    return Some(0);
+                }
+            }
+            _ => {}
+        };
+        None
+    });
+    cpu0.registers.entry('p').or_insert(0);
+
+    let mut cpu1 = CPU::new(|instruction, registers| {
+        match instruction {
+            Instruction::Snd(operand) => {
+                let value = match operand {
+                    Operand::Register(op_name) => *registers.entry(*op_name).or_insert(0),
+                    Operand::Value(op_value) => *op_value,
+                };
+                queue0.borrow_mut().push_back(value);
+                // use `~` register as a counter
+                *registers.entry('~').or_insert(0) += 1;
+            }
+            Instruction::Rcv(Operand::Register(name)) => {
+                if let Some(value) = queue1.borrow_mut().pop_front() {
+                    *registers.entry(*name).or_insert(0) = value;
+                } else {
+                    return Some(0);
+                }
+            }
+            _ => {}
+        };
+        None
+    });
+    cpu1.registers.entry('p').or_insert(1);
+
+    loop {
+        cpu0.eval(instructions);
+        cpu1.eval(instructions);
+
+        if cpu0.is_waiting
+            && queue0.borrow().is_empty()
+            && cpu1.is_waiting
+            && queue1.borrow().is_empty()
+        {
+            break;
+        }
+    }
+
+    *cpu1.registers.get(&'~').unwrap() as usize
+}
+
 fn main() -> Result<(), Box<dyn error::Error>> {
     println!("--- Day18: Duet ---");
 
@@ -239,6 +320,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let input_data = read_input(&input_file)?;
 
     println!("{}", part1(&input_data));
+    println!("{}", part2(&input_data));
 
     Ok(())
 }
