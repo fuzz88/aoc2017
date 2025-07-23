@@ -5,9 +5,7 @@ use std::fs;
 type Map = Vec<u8>;
 
 fn read_input(filename: &str) -> Result<Map, Box<dyn error::Error>> {
-    let map = fs::read_to_string(filename)?
-        .as_bytes()
-        .to_vec();
+    let map = fs::read_to_string(filename)?.as_bytes().to_vec();
 
     Ok(map)
 }
@@ -27,55 +25,64 @@ where
         idx += 1;
     };
 
+    // starting from first `|`, going down.
     let mut current_point = starting_point as isize;
     let mut dx: isize = 0;
     let mut dy: isize = 1;
 
-    'main: loop {
-        if dy != 0 {
-            while map[current_point as usize] != b'+' {
-                visit(map[current_point as usize]);
-
-                if map[current_point as usize] == b' ' {
-                    break 'main;
-                }
-                current_point += dy * line_length as isize;
-            }
+    'walk: loop {
+        // walking till `+` or stop walking if reached ` `
+        while map[current_point as usize] != b'+' {
             visit(map[current_point as usize]);
 
-            dy = 0;
-            if current_point > 0 && map[current_point as usize - 1] != b' ' {
-                dx = -1;
-            }
-            if current_point as usize + 1 < map.len() && map[current_point as usize + 1] != b' ' {
-                dx = 1;
-            }
-            current_point += dx;
-        }
-        if dx != 0 {
-            while map[current_point as usize] != b'+' {
-                visit(map[current_point as usize]);
-
-                if map[current_point as usize] == b' ' {
-                    break 'main;
-                }
-                current_point += dx;
-            }
-            visit(map[current_point as usize]);
-
-            dx = 0;
-            if current_point - line_length as isize >= 0
-                && map[current_point as usize - line_length] != b' '
-            {
-                dy = -1;
-            }
-            if current_point as usize + line_length < map.len()
-                && map[current_point as usize + line_length] != b' '
-            {
-                dy = 1;
+            if map[current_point as usize] == b' ' {
+                break 'walk;
             }
             current_point += dy * line_length as isize;
         }
+
+        // standing on `+`
+        visit(map[current_point as usize]);
+
+        // change direction, left or right
+        dy = 0;
+        if current_point > 0 && map[current_point as usize - 1] != b' ' {
+            dx = -1;
+        }
+        if current_point as usize + 1 < map.len() && map[current_point as usize + 1] != b' ' {
+            dx = 1;
+        }
+        // step in new direction
+        current_point += dx;
+
+        // walking till `+` or stop walking if reached ` `
+        while map[current_point as usize] != b'+' {
+            visit(map[current_point as usize]);
+
+            if map[current_point as usize] == b' ' {
+                break 'walk;
+            }
+            current_point += dx;
+        }
+        // standing on `+`
+        visit(map[current_point as usize]);
+
+        // change direction, up or down
+        dx = 0;
+        if current_point - line_length as isize >= 0
+            && map[current_point as usize - line_length] != b' '
+        {
+            dy = -1;
+        }
+        if current_point as usize + line_length < map.len()
+            && map[current_point as usize + line_length] != b' '
+        {
+            dy = 1;
+        }
+        // step in new direction
+        current_point += dy * line_length as isize;
+
+        // repeat
     }
 }
 
@@ -100,7 +107,8 @@ fn part2(map: &Map) -> usize {
     walker(map, |_| {
         steps += 1;
     });
-
+    
+    // don't count standing at start as a step.
     steps - 1
 }
 
