@@ -103,7 +103,7 @@ fn filter_collided(particles: &mut Vec<Particle>) -> &Vec<Particle> {
     let mut removing = false;
 
     loop {
-        if c >= particles.len() {
+        if c == particles.len() {
             break;
         }
         if particles[c - 1].position == particles[c].position {
@@ -125,6 +125,8 @@ fn filter_collided(particles: &mut Vec<Particle>) -> &Vec<Particle> {
 fn part2(particles: &Vec<Particle>) -> usize {
     // How many particles are left after all collisions are resolved?
 
+    // idk how to check if all collisions are resolved.
+    // just checking 10k ticks.
     let mut n = 10_000;
     let mut particles = particles.clone();
 
