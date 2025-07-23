@@ -73,7 +73,82 @@ impl Instruction {
         F: FnMut(&Instruction, &Registers) -> Option<isize>,
     {
         match self {
-            instruction => unimplemented!("unknown instruction: {:?}", instruction),
+            Instruction::Set(register, operand) => {
+                if let Operand::Register(reg_name) = register {
+                    let value = match operand {
+                        Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0),
+                        Operand::Value(op_value) => *op_value,
+                    };
+
+                    let register = cpu.registers.entry(*reg_name).or_insert(0);
+                    *register = value;
+                    cpu.pc += 1;
+                }
+            }
+            Instruction::Add(register, operand) => {
+                if let Operand::Register(reg_name) = register {
+                    let value = match operand {
+                        Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0),
+                        Operand::Value(op_value) => *op_value,
+                    };
+
+                    let register = cpu.registers.entry(*reg_name).or_insert(0);
+                    *register += value;
+                    cpu.pc += 1;
+                }
+            }
+            Instruction::Mul(register, operand) => {
+                if let Operand::Register(reg_name) = register {
+                    let value = match operand {
+                        Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0),
+                        Operand::Value(op_value) => *op_value,
+                    };
+
+                    let register = cpu.registers.entry(*reg_name).or_insert(0);
+                    *register *= value;
+                    cpu.pc += 1;
+                }
+            }
+            Instruction::Mod(register, operand) => {
+                if let Operand::Register(reg_name) = register {
+                    let value = match operand {
+                        Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0),
+                        Operand::Value(op_value) => *op_value,
+                    };
+
+                    let register = cpu.registers.entry(*reg_name).or_insert(0);
+                    *register %= value;
+                    cpu.pc += 1;
+                }
+            }
+            Instruction::Snd(operand) => {
+                let value = match operand {
+                    Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0),
+                    Operand::Value(op_value) => *op_value,
+                };
+                let register = cpu.registers.entry('~').or_insert(0);
+                *register = value;
+                cpu.pc += 1;
+            }
+            Instruction::Rcv(..) => {
+                // processed via trap
+                cpu.pc += 1;
+            }
+            Instruction::Jgz(operand1, operand2) => {
+                let is_jmp = match operand1 {
+                    Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0) > 0,
+                    Operand::Value(op_value) => *op_value > 0,
+                };
+                let offset = match operand2 {
+                    Operand::Register(op_name) => *cpu.registers.entry(*op_name).or_insert(0),
+                    Operand::Value(op_value) => *op_value,
+                };
+                if is_jmp {
+                    cpu.pc += offset;
+                } else {
+                    cpu.pc += 1;
+                }
+            }
         }
     }
 }
@@ -85,7 +160,7 @@ where
     F: FnMut(&Instruction, &Registers) -> Option<isize>,
 {
     registers: Registers,
-    pc: usize,
+    pc: isize,
     trap: F,
 }
 
@@ -100,7 +175,7 @@ impl<F: FnMut(&Instruction, &Registers) -> Option<isize>> CPU<F> {
 
     fn eval(&mut self, instructions: &[Instruction]) -> isize {
         loop {
-            let next_instruction = &instructions[self.pc];
+            let next_instruction = &instructions[self.pc as usize];
 
             if let Some(value) = (self.trap)(next_instruction, &self.registers) {
                 return value;
@@ -108,7 +183,13 @@ impl<F: FnMut(&Instruction, &Registers) -> Option<isize>> CPU<F> {
 
             next_instruction.apply_mut(self);
 
-            self.pc += 1;
+            // println!("{}", self.pc);
+            // println!("{:?}", next_instruction);
+            // std::thread::sleep(std::time::Duration::from_millis(2000));
+
+            if self.pc as usize >= instructions.len() {
+                return 0;
+            }
         }
     }
 }
@@ -123,28 +204,20 @@ fn read_input(filename: &str) -> Result<Vec<Instruction>, Box<dyn error::Error>>
 }
 
 fn part1(instructions: &[Instruction]) -> isize {
-    let mut last_freq = 0;
-
+    // What is the value of the recovered frequency
+    // (the value of the most recently played sound)
+    // the first time a rcv instruction is executed with a non-zero value?
     let mut cpu = CPU::new(|instruction, registers| {
-        println!("trapped: {:?}", instruction);
         match instruction {
-            Instruction::Snd(operand) => match operand {
-                Operand::Register(name) => {
-                    last_freq = *registers.get(name).unwrap();
-                }
-                Operand::Value(value) => {
-                    last_freq = *value;
-                }
-            },
             Instruction::Rcv(operand) => match operand {
                 Operand::Register(name) => {
                     if *registers.get(name).unwrap() != 0 {
-                        return Some(last_freq);
+                        return Some(*registers.get(&'~').unwrap());
                     }
                 }
                 Operand::Value(value) => {
                     if *value != 0 {
-                        return Some(last_freq);
+                        return Some(*registers.get(&'~').unwrap());
                     }
                 }
             },
