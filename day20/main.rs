@@ -57,7 +57,24 @@ fn read_input(filename: &str) -> Result<Vec<Particle>, Box<dyn error::Error>> {
 
 fn part1(particles: &[Particle]) -> usize {
     // Which particle will stay closest to position <0,0,0> in the long term?
-    0
+
+    let min_accel = particles
+        .iter()
+        .enumerate()
+        .map(|(idx, particle)| {
+            (
+                particle
+                    .acceleration
+                    .iter()
+                    .copied()
+                    .fold(0, |acc, c| acc + i32::abs(c)),
+                idx,
+            )
+        })
+        .min()
+        .unwrap();
+
+    min_accel.1
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
