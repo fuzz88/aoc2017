@@ -69,13 +69,16 @@ fn read_input(filename: &str) -> Result<Vec<Particle>, Box<dyn error::Error>> {
 fn part1(particles: &[Particle]) -> usize {
     // Which particle will stay closest to position <0,0,0> in the long term?
 
-    // i guess that "in the long term" means "infinity", so
     // first we need to find particles with the lowest acceleration,
     // because in the long term these particles will scatter less.
-    // but if accelerations are equal, we must look for particles with the lowest velocity.
-    // and if, for example, we have particles moving equally slow,
-    // or if they don't move at all,
-    // closest to <0, 0, 0> will stay the one which is already closest.
+    // if the lowest accelerations are equal for some group of particles,
+    // we must look for particles with the lowest velocity within this group.
+    // if after that we have group of particles moving equally slow,
+    // or not moving at all,
+    // closest to <0, 0, 0> will be the one which is already closest.
+
+    // sort by acceleration, velocity and position in this particular order,
+    // get the minimum.
 
     particles
         .iter()
@@ -106,7 +109,9 @@ fn part1(particles: &[Particle]) -> usize {
         .3
 }
 
-fn filter_out_collided(particles: &mut Vec<Particle>) {
+fn filter_out_collided(particles: &mut Vec<Particle>) -> usize {
+    let mut removed_count = 0;
+
     particles.sort_by_key(|el| el.position);
 
     let mut c = 1;
@@ -119,40 +124,66 @@ fn filter_out_collided(particles: &mut Vec<Particle>) {
         if particles[c - 1].position == particles[c].position {
             removing = true;
             particles.remove(c - 1);
+            removed_count += 1;
         } else {
             if removing {
                 particles.remove(c - 1);
+                removed_count += 1;
                 removing = false;
             } else {
                 c += 1;
             }
         }
     }
+
+    removed_count
 }
 
-fn get_pairs_distances(particles: &Vec<Particle>) -> Vec<u64> {
-    vec![]
+fn calculate_pairs_distances(particles: &Vec<Particle>) -> Vec<i64> {
+    let mut distances = vec![];
+
+    for (idx1, p1) in particles.iter().enumerate() {
+        for (idx2, p2) in particles.iter().enumerate() {
+            if idx1 != idx2 {
+                distances.push(
+                    i64::abs(p1.position[0] - p2.position[0])
+                        + i64::abs(p1.position[1] - p2.position[1])
+                        + i64::abs(p1.position[2] - p2.position[2]),
+                );
+            }
+        }
+    }
+
+    distances
 }
 
 fn part2(particles: &Vec<Particle>) -> usize {
     // How many particles are left after all collisions are resolved?
 
-    // idk how to check if all collisions are resolved.
-    // maybe it makes sense to calculate distances between pairs,
-    // and couple of times check that distances are growing.
-
-    // just checking million ticks.
-    let mut n = 1_000_000;
     let mut particles = particles.clone();
 
-    while n != 0 {
-        filter_out_collided(&mut particles);
+    loop {
+        let distances = calculate_pairs_distances(&particles);
 
         particles.iter_mut().for_each(|p| {
             p.update();
         });
 
-        n -= 1;
+        let removed_count = filter_out_collided(&mut particles);
+
+        if removed_count == 0 {
+            let next_distances = calculate_pairs_distances(&particles);
+            if distances
+                .iter()
+                .zip(next_distances.iter())
+                .map(|(a, b)| a - b)
+                .all(|d| d < 0)
+            {
+                // all collisions are resolved when particles
+                // are scattering away from each other.
+                break;
+            }
+        }
     }
 
     particles.len()
