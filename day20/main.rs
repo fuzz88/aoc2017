@@ -125,21 +125,19 @@ fn filter_out_collided(particles: &mut Vec<Particle>) -> usize {
             removing = true;
             particles.remove(c - 1);
             removed_count += 1;
+        } else if removing {
+            particles.remove(c - 1);
+            removed_count += 1;
+            removing = false;
         } else {
-            if removing {
-                particles.remove(c - 1);
-                removed_count += 1;
-                removing = false;
-            } else {
-                c += 1;
-            }
+            c += 1;
         }
     }
 
     removed_count
 }
 
-fn calculate_pairs_distances(particles: &Vec<Particle>) -> Vec<i64> {
+fn calculate_pairs_distances(particles: &[Particle]) -> Vec<i64> {
     let mut distances = vec![];
 
     for (idx1, p1) in particles.iter().enumerate() {
@@ -157,10 +155,10 @@ fn calculate_pairs_distances(particles: &Vec<Particle>) -> Vec<i64> {
     distances
 }
 
-fn part2(particles: &Vec<Particle>) -> usize {
+fn part2(particles: &[Particle]) -> usize {
     // How many particles are left after all collisions are resolved?
 
-    let mut particles = particles.clone();
+    let mut particles = particles.to_owned();
 
     loop {
         let distances = calculate_pairs_distances(&particles);
