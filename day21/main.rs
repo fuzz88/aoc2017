@@ -1,6 +1,7 @@
 use std::env;
 use std::error;
 use std::fs;
+use std::mem;
 
 type Rule = (Vec<u8>, Vec<u8>);
 
@@ -44,6 +45,29 @@ fn flip_horizontally(image: &[u8]) -> Vec<u8> {
         .to_owned()
 }
 
+fn transpose(image: &[u8]) -> Vec<u8> {
+    let n = usize::isqrt(image.len());
+
+    let mut result = image
+        .split(|p| *p == 47)
+        .map(|row| row.iter().copied().collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+
+    for i in 0..n {
+        for j in i..n {
+            let t = result[i][j];
+            result[i][j] = result[j][i];
+            result[j][i] = t;
+        }
+    }
+
+    result.join(&47).iter().copied().collect::<Vec<_>>()
+}
+
+fn rotate_ccw(image: &[u8]) -> Vec<u8> {
+    flip_vertically(&transpose(image))
+}
+
 fn match_rule(image: &[u8], rule: &Rule) -> usize {
     print_image(image);
     println!();
@@ -52,6 +76,12 @@ fn match_rule(image: &[u8], rule: &Rule) -> usize {
     print_image(&flip_vertically(&rule.0));
     println!();
     print_image(&flip_horizontally(&rule.0));
+    println!();
+    print_image(&rotate_ccw(&rule.0));
+    println!();
+    print_image(&rotate_ccw(&rotate_ccw(&rule.0)));
+    println!();
+    print_image(&rotate_ccw(&rotate_ccw(&rotate_ccw(&rule.0))));
 
     if image == rule.0 {
         1
