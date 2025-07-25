@@ -14,6 +14,64 @@ fn read_input(filename: &str) -> Result<Vec<Rule>, Box<dyn error::Error>> {
     Ok(rules)
 }
 
+fn print_image(image: &[u8]) {
+    image.iter().for_each(|pixel| match pixel {
+        b'/' => {
+            print!("\n");
+        }
+        sym => {
+            print!("{}", *sym as char);
+        }
+    });
+    print!("\n");
+}
+
+fn flip_vertically(image: &[u8]) -> Vec<u8> {
+    image
+        .split(|p| *p == 47)
+        .rev()
+        .collect::<Vec<_>>()
+        .join(&47)
+        .to_owned()
+}
+
+fn flip_horizontally(image: &[u8]) -> Vec<u8> {
+    image
+        .split(|p| *p == 47)
+        .map(|row| row.iter().copied().rev().collect::<Vec<_>>())
+        .collect::<Vec<_>>()
+        .join(&47)
+        .to_owned()
+}
+
+fn match_rule(image: &[u8], rule: &Rule) -> usize {
+    print_image(image);
+    println!();
+    print_image(&rule.0);
+    println!();
+    print_image(&flip_vertically(&rule.0));
+    println!();
+    print_image(&flip_horizontally(&rule.0));
+
+    if image == rule.0 {
+        1
+    } else {
+        0
+    }
+}
+
+fn part1(rules: &[Rule]) -> usize {
+    println!("{:?}", rules);
+
+    let glider = [46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
+    for rule in rules {
+        println!("------------");
+        println!("{}", match_rule(&glider, rule));
+        println!("------------");
+    }
+    0
+}
+
 fn main() -> Result<(), Box<dyn error::Error>> {
     println!("--- Day21: Fractal Art ---");
 
@@ -23,7 +81,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let input_data = read_input(&input_file)?;
 
-    println!("{:?}", input_data);
+    println!("{}", part1(&input_data));
 
     Ok(())
 }
