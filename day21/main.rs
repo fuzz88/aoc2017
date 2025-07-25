@@ -3,13 +3,13 @@ use std::error;
 use std::fs;
 use std::mem;
 
-type Rule = (Vec<u8>, Vec<u8>);
+type Rule = (Vec<Vec<u8>>, Vec<u8>);
 
 fn read_input(filename: &str) -> Result<Vec<Rule>, Box<dyn error::Error>> {
     let rules = fs::read_to_string(filename)?
         .lines()
         .map(|line| line.split(" => ").map(|s| s.as_bytes().to_owned()))
-        .map(|mut bytes| (bytes.next().unwrap(), bytes.next().unwrap()))
+        .map(|mut bytes| (vec![bytes.next().unwrap()], bytes.next().unwrap()))
         .collect();
 
     Ok(rules)
@@ -76,43 +76,55 @@ fn rotate_ccw(image: &mut [u8], n: usize, count: usize) {
 fn match_rule(image: &[u8], rule: &Rule) -> usize {
     let n = usize::isqrt(image.len());
 
-    print_image(&image);
-    println!("flipping horizontally:");
-    let mut image1 = image.to_owned();
-    flip_horizontally(&mut image1, n);
-    print_image(&image1);
-    println!("flipping vertically:");
-    let mut image2 = image.to_owned();
-    flip_vertically(&mut image2, n);
-    print_image(&image2);
-    println!("transposing:");
-    let mut image3 = image.to_owned();
-    transpose(&mut image3, n);
-    print_image(&image3);
-    println!("rotating ccw:");
-    let mut image4 = image.to_owned();
-    rotate_ccw(&mut image4, n, 1);
-    print_image(&image4);
-    // print_image(&rotate_ccw(&rule.0));
-    // println!();
-    // print_image(&rotate_ccw(&rotate_ccw(&rule.0)));
-    // println!();
-    // print_image(&rotate_ccw(&rotate_ccw(&rotate_ccw(&rule.0))));
-
-    if image == rule.0 {
+    if image == rule.0[0] {
         1
     } else {
         0
     }
 }
 
+fn augment_rules(rules: &mut [Rule]) {
+    for rule in rules {
+        let n = usize::isqrt(rule.0[0].len());
+
+        let mut augmented = rule.0[0].clone();
+        flip_vertically(&mut augmented, n);
+        rule.0.push(augmented);
+
+        let mut augmented = rule.0[0].clone();
+        flip_horizontally(&mut augmented, n);
+        rule.0.push(augmented);
+
+        let mut augmented = rule.0[0].clone();
+        rotate_ccw(&mut augmented, n, 1);
+        rule.0.push(augmented);
+
+        let mut augmented = rule.0[0].clone();
+        rotate_ccw(&mut augmented, n, 2);
+        rule.0.push(augmented);
+
+        let mut augmented = rule.0[0].clone();
+        rotate_ccw(&mut augmented, n, 3);
+        rule.0.push(augmented);
+
+        rule.0.sort();
+        rule.0.dedup();
+    }
+}
+
 fn part1(rules: &[Rule]) -> usize {
-    println!("{:?}", rules);
+    let mut rules = rules.to_owned();
+    augment_rules(&mut rules);
+    println!("{:?}", &rules);
 
     let glider = [46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
     for rule in rules {
+        for i in 0..rule.0.len() {
+            print_image(&rule.0[i]);
+            println!();
+        }
         println!("------------");
-        println!("{}", match_rule(&glider, rule));
+        println!("{}", match_rule(&glider, &rule));
         println!("------------");
     }
     0
