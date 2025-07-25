@@ -116,14 +116,22 @@ fn part1(rules: &[Rule]) -> usize {
     let mut rules = rules.to_owned();
     augment_rules(&mut rules);
 
-    let glider = [46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
+    //     .#.
+    //     ..#
+    //     ###
+
+    let mut image = vec![46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
+
     for rule in rules {
-        if is_rule_matched(&glider, &rule) {
+        if is_rule_matched(&image, &rule) {
             println!("matched");
             print_image(&rule.0[0]);
             println!();
+            print_image(&rule.1);
+            image = rule.1.clone();
         }
     }
+
     0
 }
 
