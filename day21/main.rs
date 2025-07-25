@@ -73,14 +73,9 @@ fn rotate_ccw(image: &mut [u8], n: usize, count: usize) {
     }
 }
 
-fn match_rule(image: &[u8], rule: &Rule) -> usize {
-    let n = usize::isqrt(image.len());
-
-    if image == rule.0[0] {
-        1
-    } else {
-        0
-    }
+fn is_rule_matched(image: &[u8], rule: &Rule) -> bool {
+    let patterns = &rule.0;
+    patterns.iter().any(|pattern| pattern == image)
 }
 
 fn augment_rules(rules: &mut [Rule]) {
@@ -89,23 +84,28 @@ fn augment_rules(rules: &mut [Rule]) {
 
         let mut augmented = rule.0[0].clone();
         flip_vertically(&mut augmented, n);
-        rule.0.push(augmented);
+        rule.0.push(augmented.clone());
+
+        (1..=3).for_each(|count| {
+            rotate_ccw(&mut augmented, n, count);
+            rule.0.push(augmented.clone());
+        });
 
         let mut augmented = rule.0[0].clone();
         flip_horizontally(&mut augmented, n);
-        rule.0.push(augmented);
+        rule.0.push(augmented.clone());
+
+        (1..=3).for_each(|count| {
+            rotate_ccw(&mut augmented, n, count);
+            rule.0.push(augmented.clone());
+        });
 
         let mut augmented = rule.0[0].clone();
-        rotate_ccw(&mut augmented, n, 1);
-        rule.0.push(augmented);
 
-        let mut augmented = rule.0[0].clone();
-        rotate_ccw(&mut augmented, n, 2);
-        rule.0.push(augmented);
-
-        let mut augmented = rule.0[0].clone();
-        rotate_ccw(&mut augmented, n, 3);
-        rule.0.push(augmented);
+        (1..=3).for_each(|count| {
+            rotate_ccw(&mut augmented, n, count);
+            rule.0.push(augmented.clone());
+        });
 
         rule.0.sort();
         rule.0.dedup();
@@ -115,17 +115,14 @@ fn augment_rules(rules: &mut [Rule]) {
 fn part1(rules: &[Rule]) -> usize {
     let mut rules = rules.to_owned();
     augment_rules(&mut rules);
-    println!("{:?}", &rules);
 
     let glider = [46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
     for rule in rules {
-        for i in 0..rule.0.len() {
-            print_image(&rule.0[i]);
+        if is_rule_matched(&glider, &rule) {
+            println!("matched");
+            print_image(&rule.0[0]);
             println!();
         }
-        println!("------------");
-        println!("{}", match_rule(&glider, &rule));
-        println!("------------");
     }
     0
 }
