@@ -15,17 +15,17 @@ fn read_input(filename: &str) -> Result<Vec<Rule>, Box<dyn error::Error>> {
     Ok(rules)
 }
 
-fn print_image(image: &[u8]) {
-    image.iter().for_each(|pixel| match pixel {
-        b'/' => {
-            print!("\n");
-        }
-        sym => {
-            print!("{}", *sym as char);
-        }
-    });
-    print!("\n");
-}
+// fn print_image(image: &[u8]) {
+//     image.iter().for_each(|pixel| match pixel {
+//         b'/' => {
+//             print!("\n");
+//         }
+//         sym => {
+//             print!("{}", *sym as char);
+//         }
+//     });
+//     print!("\n");
+// }
 
 fn flip_vertically(image: &mut [u8], n: usize) {
     for i in 0..n / 2 {
@@ -134,9 +134,9 @@ fn split_image(image: &[u8], divisor: usize) -> Vec<Vec<u8>> {
         }
     }
 
-    for idx in 0..splitted.len() {
-        print_image(&splitted[idx]);
-    }
+    // for idx in 0..splitted.len() {
+    //     print_image(&splitted[idx]);
+    // }
 
     splitted
 }
@@ -163,9 +163,6 @@ fn merge_images(images: &Vec<Vec<u8>>, side_count: usize) -> Vec<u8> {
             break;
         }
     }
-    
-    println!("merged:");
-    print_image(&merged);
 
     merged
 }
@@ -181,10 +178,6 @@ fn get_next_image(image: &[u8], rules: &[Rule]) -> Vec<u8> {
             for sub_image in splitted {
                 for rule in rules {
                     if is_rule_matched(&sub_image, &rule) {
-                        println!("matched");
-                        print_image(&rule.0[0]);
-                        println!();
-                        print_image(&rule.1);
                         sub_images.push(rule.1.clone());
                     }
                 }
@@ -197,17 +190,12 @@ fn get_next_image(image: &[u8], rules: &[Rule]) -> Vec<u8> {
     unreachable!("can't get next image by these rules");
 }
 
-fn part1(rules: &[Rule]) -> usize {
+fn count_on(rules: &[Rule], image: &[u8], iteration_count: usize) -> usize {
     let mut rules = rules.to_owned();
     augment_rules(&mut rules);
 
-    // .#.
-    // ..#
-    // ###
-
-    let mut image = vec![46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
-
-    let mut iteration_count = 5;
+    let mut iteration_count = iteration_count;
+    let mut image = image.to_owned();
 
     while iteration_count != 0 {
         image = get_next_image(&image, &rules);
@@ -215,6 +203,26 @@ fn part1(rules: &[Rule]) -> usize {
     }
 
     image.iter().filter(|pixel| **pixel == 35).count()
+}
+
+fn part1(rules: &[Rule]) -> usize {
+    // .#.
+    // ..#
+    // ###
+
+    let mut image = vec![46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
+
+    count_on(rules, &image, 5)
+}
+
+fn part2(rules: &[Rule]) -> usize {
+    // .#.
+    // ..#
+    // ###
+
+    let mut image = vec![46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
+
+    count_on(rules, &image, 18)
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
@@ -227,6 +235,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let input_data = read_input(&input_file)?;
 
     println!("{}", part1(&input_data));
+    println!("{}", part2(&input_data));
 
     Ok(())
 }
