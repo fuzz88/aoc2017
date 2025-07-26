@@ -80,56 +80,103 @@ fn is_rule_matched(image: &[u8], rule: &Rule) -> bool {
 
 fn augment_rules(rules: &mut [Rule]) {
     for rule in rules {
-        let n = usize::isqrt(rule.0[0].len());
+        let patterns = &mut rule.0;
+        let n = usize::isqrt(patterns[0].len());
 
-        let mut augmented = rule.0[0].clone();
+        let mut augmented = patterns[0].clone();
         flip_vertically(&mut augmented, n);
-        rule.0.push(augmented.clone());
+        patterns.push(augmented.clone());
 
         (1..=3).for_each(|count| {
             rotate_ccw(&mut augmented, n, count);
-            rule.0.push(augmented.clone());
+            patterns.push(augmented.clone());
         });
 
-        let mut augmented = rule.0[0].clone();
+        let mut augmented = patterns[0].clone();
         flip_horizontally(&mut augmented, n);
-        rule.0.push(augmented.clone());
+        patterns.push(augmented.clone());
 
         (1..=3).for_each(|count| {
             rotate_ccw(&mut augmented, n, count);
-            rule.0.push(augmented.clone());
+            patterns.push(augmented.clone());
         });
 
-        let mut augmented = rule.0[0].clone();
+        let mut augmented = patterns[0].clone();
 
         (1..=3).for_each(|count| {
             rotate_ccw(&mut augmented, n, count);
-            rule.0.push(augmented.clone());
+            patterns.push(augmented.clone());
         });
 
-        rule.0.sort();
-        rule.0.dedup();
+        patterns.sort();
+        patterns.dedup();
     }
+}
+
+fn split_image(image: &[u8], divisor: usize) -> Vec<Vec<u8>> {
+    let n = usize::isqrt(image.len());
+    let side_count = n / divisor;
+
+    let mut splitted = vec![vec![]; side_count * side_count];
+
+    let mut current = 0;
+
+    for row in 0..side_count {
+        for col in 0..side_count {
+            for i in row * divisor..(row + 1) * divisor {
+                for j in col * divisor..(col + 1) * divisor {
+                    splitted[current].push(image[i * (n + 1) + j]);
+                }
+                splitted[current].push(47);
+            }
+            splitted[current].pop();
+            current += 1;
+        }
+    }
+
+    for idx in 0..splitted.len() {
+        print_image(&splitted[idx]);
+    }
+
+    splitted
 }
 
 fn part1(rules: &[Rule]) -> usize {
     let mut rules = rules.to_owned();
     augment_rules(&mut rules);
 
-    //     .#.
-    //     ..#
-    //     ###
+    // .#.
+    // ..#
+    // ###
 
     let mut image = vec![46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
 
-    for rule in rules {
-        if is_rule_matched(&image, &rule) {
-            println!("matched");
-            print_image(&rule.0[0]);
-            println!();
-            print_image(&rule.1);
-            image = rule.1.clone();
+    let mut iteration_count = 2;
+
+    while iteration_count != 0 {
+        let mut splitted: Vec<Vec<u8>>;
+        let n = usize::isqrt(image.len());
+
+        if n.is_multiple_of(3) {
+            splitted = split_image(&image, 3);
+        } else if n.is_multiple_of(2) {
+            splitted = split_image(&image, 2);
+        } else {
+            unreachable!("must be always a multiple");
         }
+
+        for sub_image in splitted {
+            for rule in &rules {
+                if is_rule_matched(&sub_image, &rule) {
+                    println!("matched");
+                    print_image(&rule.0[0]);
+                    println!();
+                    print_image(&rule.1);
+                    image = rule.1.clone();
+                }
+            }
+        }
+        iteration_count -= 1;
     }
 
     0
