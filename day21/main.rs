@@ -179,6 +179,8 @@ fn get_next_image(image: &[u8], rules: &[Rule]) -> Vec<u8> {
                     }
                 }
             }
+            // if not all sub_images matched the rules,
+            // then try next divisor.
             if sub_images.len() == (n / divisor) * (n / divisor) {
                 return merge_images(&sub_images, n / divisor);
             }
@@ -189,6 +191,8 @@ fn get_next_image(image: &[u8], rules: &[Rule]) -> Vec<u8> {
 
 fn count_on(rules: &[Rule], image: &[u8], iteration_count: usize) -> usize {
     let mut rules = rules.to_owned();
+    // augment rules patterns with rotations and flips, single time,
+    // so we don't need to augment it on every check.
     augment_rules(&mut rules);
 
     let mut iteration_count = iteration_count;
@@ -203,9 +207,13 @@ fn count_on(rules: &[Rule], image: &[u8], iteration_count: usize) -> usize {
 }
 
 fn part1(rules: &[Rule]) -> usize {
+    // How many pixels stay on after 5 iterations?
+
     // .#.
     // ..#
     // ###
+
+    // 47 is a new line which looks like that -> "/"
 
     let image = vec![46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
 
@@ -213,6 +221,8 @@ fn part1(rules: &[Rule]) -> usize {
 }
 
 fn part2(rules: &[Rule]) -> usize {
+    // How many pixels stay on after 18 iterations?
+
     let image = vec![46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
 
     count_on(rules, &image, 18)
