@@ -134,32 +134,29 @@ fn split_image(image: &[u8], divisor: usize) -> Vec<Vec<u8>> {
         }
     }
 
-    // for idx in 0..splitted.len() {
-    //     print_image(&splitted[idx]);
-    // }
-
     splitted
 }
 
-fn merge_images(images: &Vec<Vec<u8>>, side_count: usize) -> Vec<u8> {
+fn merge_images(images: &[Vec<u8>], side_count: usize) -> Vec<u8> {
     let mut merged = vec![];
 
     let sub_n = usize::isqrt(images[0].len());
-    let side_len = side_count * sub_n;
 
-    let mut k = 0;
+    let mut row_start = 0;
 
     loop {
         for i in 0..sub_n {
-            for row in k..k + side_count {
+            for sub_image in images.iter().skip(row_start).take(side_count) {
                 for j in 0..sub_n {
-                    merged.push(images[row][i * (sub_n + 1) + j]);
+                    merged.push(sub_image[i * (sub_n + 1) + j]);
                 }
             }
             merged.push(47);
         }
-        k += side_count;
-        if k >= images.len() {
+
+        row_start += side_count;
+
+        if row_start >= images.len() {
             break;
         }
     }
@@ -173,11 +170,11 @@ fn get_next_image(image: &[u8], rules: &[Rule]) -> Vec<u8> {
     for divisor in [2, 3].iter() {
         if n.is_multiple_of(*divisor) {
             let mut sub_images = vec![];
-            let splitted = split_image(&image, *divisor);
+            let splitted = split_image(image, *divisor);
 
             for sub_image in splitted {
                 for rule in rules {
-                    if is_rule_matched(&sub_image, &rule) {
+                    if is_rule_matched(&sub_image, rule) {
                         sub_images.push(rule.1.clone());
                     }
                 }
@@ -210,17 +207,13 @@ fn part1(rules: &[Rule]) -> usize {
     // ..#
     // ###
 
-    let mut image = vec![46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
+    let image = vec![46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
 
     count_on(rules, &image, 5)
 }
 
 fn part2(rules: &[Rule]) -> usize {
-    // .#.
-    // ..#
-    // ###
-
-    let mut image = vec![46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
+    let image = vec![46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
 
     count_on(rules, &image, 18)
 }
