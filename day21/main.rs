@@ -156,7 +156,7 @@ fn merge_images(images: &[Vec<u8>], side_count: usize) -> Vec<u8> {
 
         row_start += side_count;
 
-        if row_start >= images.len() {
+        if row_start == images.len() {
             break;
         }
     }
