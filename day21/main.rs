@@ -141,6 +141,41 @@ fn split_image(image: &[u8], divisor: usize) -> Vec<Vec<u8>> {
     splitted
 }
 
+fn merge_images(images: &Vec<Vec<u8>>, side_count: usize) -> Vec<u8> {
+    // dbg!(&images);
+    if images.len() == 1 {
+        return images[0].clone();
+    }
+    todo!("merging")
+}
+
+fn get_next_image(image: &[u8], rules: &[Rule]) -> Vec<u8> {
+    let n = usize::isqrt(image.len());
+
+    for divisor in [2, 3].iter() {
+        if n.is_multiple_of(*divisor) {
+            let mut sub_images = vec![];
+            let splitted = split_image(&image, *divisor);
+
+            for sub_image in splitted {
+                for rule in rules {
+                    if is_rule_matched(&sub_image, &rule) {
+                        println!("matched");
+                        print_image(&rule.0[0]);
+                        println!();
+                        print_image(&rule.1);
+                        sub_images.push(rule.1.clone());
+                    }
+                }
+            }
+            if sub_images.len() == (n / divisor) * (n / divisor) {
+                return merge_images(&sub_images, n / divisor);
+            }
+        }
+    }
+    unreachable!("can't get next image by these rules");
+}
+
 fn part1(rules: &[Rule]) -> usize {
     let mut rules = rules.to_owned();
     augment_rules(&mut rules);
@@ -154,28 +189,7 @@ fn part1(rules: &[Rule]) -> usize {
     let mut iteration_count = 2;
 
     while iteration_count != 0 {
-        let mut splitted: Vec<Vec<u8>>;
-        let n = usize::isqrt(image.len());
-
-        if n.is_multiple_of(3) {
-            splitted = split_image(&image, 3);
-        } else if n.is_multiple_of(2) {
-            splitted = split_image(&image, 2);
-        } else {
-            unreachable!("must be always a multiple");
-        }
-
-        for sub_image in splitted {
-            for rule in &rules {
-                if is_rule_matched(&sub_image, &rule) {
-                    println!("matched");
-                    print_image(&rule.0[0]);
-                    println!();
-                    print_image(&rule.1);
-                    image = rule.1.clone();
-                }
-            }
-        }
+        image = get_next_image(&image, &rules);
         iteration_count -= 1;
     }
 
