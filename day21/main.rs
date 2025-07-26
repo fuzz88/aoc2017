@@ -142,11 +142,32 @@ fn split_image(image: &[u8], divisor: usize) -> Vec<Vec<u8>> {
 }
 
 fn merge_images(images: &Vec<Vec<u8>>, side_count: usize) -> Vec<u8> {
-    // dbg!(&images);
-    if images.len() == 1 {
-        return images[0].clone();
+    let mut merged = vec![];
+
+    let sub_n = usize::isqrt(images[0].len());
+    let side_len = side_count * sub_n;
+
+    let mut k = 0;
+
+    loop {
+        for i in 0..sub_n {
+            for row in k..k + side_count {
+                for j in 0..sub_n {
+                    merged.push(images[row][i * (sub_n + 1) + j]);
+                }
+            }
+            merged.push(47);
+        }
+        k += side_count;
+        if k >= images.len() {
+            break;
+        }
     }
-    todo!("merging")
+    
+    println!("merged:");
+    print_image(&merged);
+
+    merged
 }
 
 fn get_next_image(image: &[u8], rules: &[Rule]) -> Vec<u8> {
@@ -186,14 +207,14 @@ fn part1(rules: &[Rule]) -> usize {
 
     let mut image = vec![46, 35, 46, 47, 46, 46, 35, 47, 35, 35, 35];
 
-    let mut iteration_count = 2;
+    let mut iteration_count = 5;
 
     while iteration_count != 0 {
         image = get_next_image(&image, &rules);
         iteration_count -= 1;
     }
 
-    0
+    image.iter().filter(|pixel| **pixel == 35).count()
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
