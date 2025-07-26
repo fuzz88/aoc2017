@@ -12,6 +12,13 @@ enum Direction {
     Down,
 }
 
+enum Status {
+    Clean,
+    Weakened,
+    Infected,
+    Flagged,
+}
+
 fn read_input(filename: &str) -> Result<Nodes, Box<dyn error::Error>> {
     let map = fs::read_to_string(filename)?.as_bytes().to_owned();
 
@@ -43,7 +50,7 @@ fn next_coordinates(coordinates: (i64, i64), direction: &Direction) -> (i64, i64
     }
 }
 
-fn next_direction(direction: &Direction, infected: bool) -> Direction {
+fn next_direction_simple(direction: &Direction, infected: bool) -> Direction {
     match (direction, infected) {
         (Direction::Up, true) => Direction::Right,
         (Direction::Up, false) => Direction::Left,
@@ -60,6 +67,7 @@ fn part1(nodes: &Nodes) -> usize {
     // Given your actual map, after 10000 bursts of activity,
     // how many bursts cause a node to become infected?
     // (Do not count nodes that begin infected.)
+
     let mut infected_nodes = nodes.clone();
 
     let mut current_direction = Direction::Up;
@@ -70,10 +78,10 @@ fn part1(nodes: &Nodes) -> usize {
 
     loop {
         if infected_nodes.contains(&current_coordinates) {
-            current_direction = next_direction(&current_direction, true);
+            current_direction = next_direction_simple(&current_direction, true);
             infected_nodes.remove(&current_coordinates);
         } else {
-            current_direction = next_direction(&current_direction, false);
+            current_direction = next_direction_simple(&current_direction, false);
             infected_nodes.insert(current_coordinates);
             infections += 1;
         }
@@ -83,6 +91,75 @@ fn part1(nodes: &Nodes) -> usize {
         burst_count += 1;
 
         if burst_count == 10000 {
+            break;
+        }
+    }
+
+    infections
+}
+
+fn next_direction_complex(direction: &Direction, status: &Status) -> Direction {
+    match (direction, status) {
+        (Direction::Up, Status::Clean) => Direction::Left,
+        (Direction::Up, Status::Weakened) => Direction::Up,
+        (Direction::Up, Status::Infected) => Direction::Right,
+        (Direction::Up, Status::Flagged) => Direction::Down,
+
+        (Direction::Down, Status::Clean) => Direction::Right,
+        (Direction::Down, Status::Weakened) => Direction::Down,
+        (Direction::Down, Status::Infected) => Direction::Left,
+        (Direction::Down, Status::Flagged) => Direction::Up,
+
+        (Direction::Left, Status::Clean) => Direction::Down,
+        (Direction::Left, Status::Weakened) => Direction::Left,
+        (Direction::Left, Status::Infected) => Direction::Up,
+        (Direction::Left, Status::Flagged) => Direction::Right,
+
+        (Direction::Right, Status::Clean) => Direction::Up,
+        (Direction::Right, Status::Weakened) => Direction::Right,
+        (Direction::Right, Status::Infected) => Direction::Down,
+        (Direction::Right, Status::Flagged) => Direction::Left,
+    }
+}
+
+fn part2(nodes: &Nodes) -> usize {
+    // Given your actual map, after 10000000 bursts of activity,
+    // how many bursts cause a node to become infected?
+    // (Do not count nodes that begin infected.)
+
+    let mut infected_nodes = nodes.clone();
+    let mut weakened_nodes = HashSet::new();
+    let mut flagged_nodes = HashSet::new();
+
+    let mut current_direction = Direction::Up;
+    let mut current_coordinates = (0, 0);
+
+    let mut burst_count = 0;
+    let mut infections = 0;
+
+    loop {
+        if infected_nodes.contains(&current_coordinates) {
+            current_direction = next_direction_complex(&current_direction, &Status::Infected);
+            infected_nodes.remove(&current_coordinates);
+            flagged_nodes.insert(current_coordinates);
+        } else if weakened_nodes.contains(&current_coordinates) {
+            current_direction = next_direction_complex(&current_direction, &Status::Weakened);
+            weakened_nodes.remove(&current_coordinates);
+            infected_nodes.insert(current_coordinates);
+            infections += 1;
+        } else if flagged_nodes.contains(&current_coordinates) {
+            current_direction = next_direction_complex(&current_direction, &Status::Flagged);
+            flagged_nodes.remove(&current_coordinates);
+        } else {
+            current_direction = next_direction_complex(&current_direction, &Status::Clean);
+            weakened_nodes.insert(current_coordinates);
+        }
+
+        current_coordinates = next_coordinates(current_coordinates, &current_direction);
+
+        burst_count += 1;
+
+        if burst_count == 10_000_000 {
             break;
         }
     }
@@ -100,6 +177,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let input_data = read_input(&input_file)?;
 
     println!("{}", part1(&input_data));
+    println!("{}", part2(&input_data));
 
     Ok(())
 }
