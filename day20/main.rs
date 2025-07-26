@@ -25,28 +25,30 @@ impl From<&str> for Particle {
     fn from(value: &str) -> Self {
         let mut components = value.split(", ");
 
+        let parse_int = |int: &str| int.parse().unwrap();
+
         let positions = components.next().unwrap();
         let mut positions = positions[3..positions.len() - 1].split(",");
         let position = [
-            positions.next().unwrap().parse().unwrap(),
-            positions.next().unwrap().parse().unwrap(),
-            positions.next().unwrap().parse().unwrap(),
+            positions.next().map(parse_int).unwrap(),
+            positions.next().map(parse_int).unwrap(),
+            positions.next().map(parse_int).unwrap(),
         ];
 
         let velocities = components.next().unwrap();
         let mut velocities = velocities[3..velocities.len() - 1].split(",");
         let velocity = [
-            velocities.next().unwrap().parse().unwrap(),
-            velocities.next().unwrap().parse().unwrap(),
-            velocities.next().unwrap().parse().unwrap(),
+            velocities.next().map(parse_int).unwrap(),
+            velocities.next().map(parse_int).unwrap(),
+            velocities.next().map(parse_int).unwrap(),
         ];
 
         let accelerations = components.next().unwrap();
         let mut accelerations = accelerations[3..accelerations.len() - 1].split(",");
         let acceleration = [
-            accelerations.next().unwrap().parse().unwrap(),
-            accelerations.next().unwrap().parse().unwrap(),
-            accelerations.next().unwrap().parse().unwrap(),
+            accelerations.next().map(parse_int).unwrap(),
+            accelerations.next().map(parse_int).unwrap(),
+            accelerations.next().map(parse_int).unwrap(),
         ];
 
         Particle {
