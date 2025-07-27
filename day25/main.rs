@@ -51,7 +51,7 @@ fn read_input(filename: &str) -> Result<Blueprint, Box<dyn error::Error>> {
     let mut states = States::new();
 
     loop {
-        if lines.next() == None {
+        if lines.next().is_none() {
             break;
         }
 
