@@ -83,7 +83,7 @@ fn find_longest_bridge(
     (length, strength)
 }
 
-fn part1(components: &Vec<Component>) -> u32 {
+fn part1(components: &[Component]) -> u32 {
     // What is the strength of the strongest bridge
     // you can make with the components you have available?
     let bridge = vec![(0, 0)];
@@ -91,7 +91,7 @@ fn part1(components: &Vec<Component>) -> u32 {
     find_strongest_bridge(bridge, components.to_vec(), 0)
 }
 
-fn part2(components: &Vec<Component>) -> u32 {
+fn part2(components: &[Component]) -> u32 {
     // What is the strength of the longest bridge you can make?
     // If you can make multiple bridges of the longest length, pick the strongest one.
     let bridge = vec![(0, 0)];
