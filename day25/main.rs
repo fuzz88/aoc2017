@@ -3,7 +3,6 @@ use std::env;
 use std::error;
 use std::fs;
 
-#[derive(Debug)]
 enum Direction {
     Left,
     Right,
@@ -19,14 +18,12 @@ impl From<&str> for Direction {
     }
 }
 
-#[derive(Debug)]
 struct Action {
     write_value: u8,
     next_direction: Direction,
     next_state: String,
 }
 
-#[derive(Debug)]
 struct State {
     on_zero: Action,
     on_one: Action,
