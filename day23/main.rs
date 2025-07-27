@@ -151,14 +151,34 @@ fn part1(instructions: &[Instruction]) -> usize {
     // How many times is the mul instruction invoked?
     let mut mul_count = 0;
 
-    let mut cpu = CPU::new(|instruction| match instruction {
-        Instruction::Mul(..) => mul_count += 1,
-        _ => {}
+    let mut cpu = CPU::new(|instruction| {
+        if let Instruction::Mul(..) = instruction {
+            mul_count += 1;
+        }
     });
 
     cpu.eval(instructions);
 
     mul_count
+}
+
+fn part2(_instructions: &[Instruction]) -> usize {
+    // After setting register a to 1, if the program were to run to completion,
+    // what value would be left in register h?
+
+    let is_prime = |n| {
+        for i in 2..usize::isqrt(n) + 1 {
+            if n.is_multiple_of(i) {
+                return true;
+            }
+        }
+        false
+    };
+
+    (107900..=124900)
+        .step_by(17)
+        .map(|n| is_prime(n) as usize)
+        .sum()
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
@@ -171,6 +191,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let input_data = read_input(&input_file)?;
 
     println!("{}", part1(&input_data));
+    println!("{}", part2(&input_data));
 
     Ok(())
 }
